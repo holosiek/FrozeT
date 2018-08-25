@@ -4,23 +4,20 @@
 #include <SFML/Graphics.hpp>
 #include <boost/filesystem.hpp>
 #include "bass.h"
+#include "mymisc.h"
 
-/*
-class FTButton {
-private:
-unsigned int width;
-unsigned int height;
-unsigned int x;
-unsigned int y;
-public:
-FTButton(unsigned int b_width, unsigned int b_height, unsigned int b_x, unsigned int b_y) {
-width = b_width;
-height = b_height;
-x = b_x;
-y = b_y;
+void Button::updateButton(){
+	border.setSize(sf::Vector2f(width,height));
+	border.setPosition(posX,posY);
 }
-};
-*/
+
+Button::Button(unsigned int x,unsigned int y,unsigned short wid,unsigned short hei){
+	posX = x;
+	posY = y;
+	width = wid;
+	height = hei;
+	border.setFillColor(sf::Color::Yellow);
+}
 
 //return string with length of 2
 std::string dd(std::string x) {

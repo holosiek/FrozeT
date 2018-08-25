@@ -1,6 +1,18 @@
 #ifndef MYMISC
 #define MYMISC
 
+class Button{
+	private:
+		unsigned int posX = 0;
+		unsigned int posY = 0;
+		unsigned short width = 0;
+		unsigned short height = 0;
+		sf::RectangleShape border;
+	public:
+		void updateButton();
+		Button(unsigned int x,unsigned int y,unsigned short wid,unsigned short hei);
+};
+
 void printDevices();
 std::string dblToString(double);
 std::string floatToString(float);
