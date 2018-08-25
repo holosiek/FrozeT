@@ -19,6 +19,7 @@ unsigned short           winWidth = 960;                       //Window width
 unsigned short          winHeight = 480;                       //Window height
 const unsigned short       winFPS = 60;                        //Window fps
 const std::string        winTitle = "Ceplusplus";              //Window title
+sf::Color           winBackground = sf::Color(43,43,43,255);   //Color of the window's background
 
 const std::string        fontBold = "Montserrat-Bold.otf";     //Name of the Bold font
 const std::string        fontThin = "Montserrat-Regular.otf";  //Name of the Thin font
@@ -193,7 +194,7 @@ int main(){
 		}
 
 		//Draw everything on window
-		window.clear();
+		window.clear(winBackground);
 		window.draw(text);
 		for (int i = 0; i<barAmount; i++) {
 			barRect[i].setSize(sf::Vector2f(10, static_cast<int>(aveBars[i])));

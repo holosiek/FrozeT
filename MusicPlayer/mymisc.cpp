@@ -6,21 +6,37 @@
 #include "bass.h"
 #include "mymisc.h"
 
+/*
+	Button class
+*/
+
+//Update button size
 void Button::updateButton(){
 	border.setSize(sf::Vector2f(width,height));
 	border.setPosition(posX,posY);
 }
 
-Button::Button(unsigned int x,unsigned int y,unsigned short wid,unsigned short hei){
+//Draw Button on the screen
+void Button::draw(sf::RenderWindow &win){
+	win.draw(border);
+}
+
+//Button constructors
+Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, sf::Color back){
 	posX = x;
 	posY = y;
 	width = wid;
 	height = hei;
-	border.setFillColor(sf::Color::Yellow);
+	background = back;
+	border.setFillColor(back);
+	updateButton();
+}
+Button::Button(unsigned int x,unsigned int y,unsigned short wid,unsigned short hei){
+	Button(x,y,wid,hei,sf::Color(0,0,0,0));
 }
 
-//return string with length of 2
-std::string dd(std::string x) {
+//Return string with length of 2
+std::string toDoubleChars(std::string x) {
 	if (x.size() == 1) {
 		return "0" + x;
 	}
@@ -70,6 +86,6 @@ std::string toHumanTime(double ti) {
 	timeToCheck = timeInt / 60;
 	str += intToString(timeToCheck) + ":";
 	timeInt -= timeToCheck * 60;
-	str += dd(intToString(timeInt));
+	str += toDoubleChars(intToString(timeInt));
 	return str;
 }

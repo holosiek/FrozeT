@@ -7,10 +7,13 @@ class Button{
 		unsigned int posY = 0;
 		unsigned short width = 0;
 		unsigned short height = 0;
-		sf::RectangleShape border;
+		sf::Color background;
 	public:
+		sf::RectangleShape border;
 		void updateButton();
-		Button(unsigned int x,unsigned int y,unsigned short wid,unsigned short hei);
+		void draw(sf::RenderWindow &win);
+		Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, sf::Color back);
+		Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei);
 };
 
 void printDevices();
