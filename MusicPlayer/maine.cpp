@@ -8,6 +8,9 @@
 #include <random>
 #include "bass.h"
 #include "mymisc.h"
+#include "config.h"
+
+Config                        cfg;                             //Class with constants and config values
 
 const short              deviceID = -1;                        //DeviceID of device that will play music, -1 = default
 const unsigned short         freq = 44100;                     //Frequency of channel
@@ -19,7 +22,7 @@ unsigned short           winWidth = 960;                       //Window width
 unsigned short          winHeight = 480;                       //Window height
 const unsigned short       winFPS = 60;                        //Window fps
 const std::string        winTitle = "Ceplusplus";              //Window title
-sf::Color           winBackground = sf::Color(43,43,43,255);   //Color of the window's background
+sf::Color           winBackground = cfg.light_grey;            //Color of the window's background
 
 const std::string        fontBold = "Montserrat-Bold.otf";     //Name of the Bold font
 const std::string        fontThin = "Montserrat-Regular.otf";  //Name of the Thin font
@@ -45,7 +48,7 @@ void playTrack() {
 	}
 
 	channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
-	//channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0);
+	//channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
 	//std::cout << BASS_ErrorGetCode();
 	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.1);
 	BASS_ChannelPlay(channel, FALSE);
