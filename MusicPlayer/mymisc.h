@@ -3,17 +3,25 @@
 
 class Button{
 	private:
-		unsigned int posX = 0;
-		unsigned int posY = 0;
-		unsigned short width = 0;
-		unsigned short height = 0;
-		sf::Color background;
+		unsigned int posX = 0;        //Position X on screen
+		unsigned int posY = 0;        //Position Y on screen
+		unsigned short width = 0;     //Width of button
+		unsigned short height = 0;    //Height of button
+		sf::RectangleShape border;    //Rectangle behind button describing it borders
+		sf::Color background;         //Background of button
+		/*
+			ID what to do if clicked
+			
+			0 = nothing
+			1 = play track
+		*/
+		unsigned short funcOnClick = 0;
 	public:
-		sf::RectangleShape border;
 		void updateButton();
 		void draw(sf::RenderWindow &win);
-		Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, sf::Color back);
-		Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei);
+		int checkIfClicked(sf::Vector2i mousePos);
+		Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei,unsigned int funk, sf::Color back);
+		Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, unsigned int funk);
 };
 
 void printDevices();

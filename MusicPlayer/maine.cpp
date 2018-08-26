@@ -22,7 +22,7 @@ unsigned short           winWidth = 960;                       //Window width
 unsigned short          winHeight = 480;                       //Window height
 const unsigned short       winFPS = 60;                        //Window fps
 const std::string        winTitle = "Ceplusplus";              //Window title
-sf::Color           winBackground = cfg.light_grey;            //Color of the window's background
+sf::Color           winBackground = cfg.grey;            //Color of the window's background
 
 const std::string        fontBold = "Montserrat-Bold.otf";     //Name of the Bold font
 const std::string        fontThin = "Montserrat-Regular.otf";  //Name of the Thin font
@@ -36,6 +36,11 @@ const unsigned short    barAmount = 62;                        //Amount of bars
 HSTREAM                   channel;                             //Initialize channel variable
 std::vector<std::string>   tracks;                             //Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         //Index of track used in tracks vector
+
+//Button List stored in std::vector
+std::vector<Button> buttonList = {
+	Button(10,30,20,20,1,cfg.lighter_grey)
+};
 
 void playTrack() {
 	BASS_StreamFree(channel);
@@ -89,6 +94,16 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/") {
 		}
 	}
 	return files;
+}
+
+void buttonClicked(int type){
+	switch(type){
+		case 0:
+			break;
+		case 1:
+			playNext();
+			break;
+	}
 }
 
 int main(){
@@ -148,6 +163,13 @@ int main(){
 			text.setString("end");
 		}
 
+		//Save GPU power while unfocused
+		if(!window.hasFocus() && cfg.saveEnergy == true){
+			window.setFramerateLimit(15);
+		} else {
+			window.setFramerateLimit(winFPS);
+		}
+
 		//Change progress bar time
 		progressBarTime.setString(toHumanTime(time) + "/" + toHumanTime(duration));
 		bounds = progressBarTime.getLocalBounds();
@@ -177,22 +199,31 @@ int main(){
 		while (window.pollEvent(event)) {
 			switch (event.type) {
 				//If window is coming to close
-			case sf::Event::Closed:
-				window.close();
-				return 1;
-				break;
+				case sf::Event::Closed:
+					window.close();
+					return 1;
+					break;
 				//If window is resized
-			case sf::Event::Resized:
-				window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-				windowResizing(event.size.width, event.size.height);
-				break;
-			case sf::Event::KeyPressed:
-				if (event.key.code == sf::Keyboard::P) {
-					playNext();
-				}
-				break;
-			default:
-				break;
+				case sf::Event::Resized:
+					window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+					windowResizing(event.size.width, event.size.height);
+					break;
+				//If key is pressed
+				case sf::Event::KeyPressed:
+					if(event.key.code == sf::Keyboard::P) {
+						playNext();
+					}
+					break;
+				//If button is pressed
+				case sf::Event::MouseButtonPressed:
+					if(event.mouseButton.button == 0){
+						for(int i=0; i<buttonList.size(); i++){
+							buttonClicked(buttonList[i].checkIfClicked(sf::Vector2i(event.mouseButton.x,event.mouseButton.y)));
+						}
+					}
+					break;
+				default:
+					break;
 			}
 		}
 
@@ -206,6 +237,9 @@ int main(){
 		window.draw(progressBarBack);
 		window.draw(progressBarFront);
 		window.draw(progressBarTime);
+		for(int i=0; i<buttonList.size(); i++){
+			buttonList[i].draw(window);
+		}
 		window.display();
 	}
 

@@ -21,18 +21,28 @@ void Button::draw(sf::RenderWindow &win){
 	win.draw(border);
 }
 
+//Check if mouse is clicking on the button
+int Button::checkIfClicked(sf::Vector2i mousePos){
+	if(mousePos.x >= posX && mousePos.x <= (posX+width) && mousePos.y >= posY && mousePos.y <= (posY+height)){
+		return funcOnClick;
+	} else {
+		return 0;
+	}
+}
+
 //Button constructors
-Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, sf::Color back){
+Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, unsigned int funk, sf::Color back){
 	posX = x;
 	posY = y;
 	width = wid;
 	height = hei;
 	background = back;
+	funcOnClick = funk;
 	border.setFillColor(back);
 	updateButton();
 }
-Button::Button(unsigned int x,unsigned int y,unsigned short wid,unsigned short hei){
-	Button(x,y,wid,hei,sf::Color(0,0,0,0));
+Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, unsigned int funk){
+	Button(x,y,wid,hei,funk,sf::Color(0,0,0,0));
 }
 
 //Return string with length of 2
