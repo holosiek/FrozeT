@@ -1,6 +1,6 @@
 # FrozeT - Music Player
 
-FrozeT is an open source music player written in C++ with SFML and Bass libraries. 
+FrozeT is an open source music player written in C++ with SFML, Boost and Bass libraries. 
 
 ## Features
 
