@@ -22,7 +22,7 @@ unsigned short           winWidth = 960;                       //Window width
 unsigned short          winHeight = 480;                       //Window height
 const unsigned short       winFPS = 60;                        //Window fps
 const std::string        winTitle = "Ceplusplus";              //Window title
-sf::Color           winBackground = cfg.grey;            //Color of the window's background
+sf::Color           winBackground = cfg.grey;                  //Color of the window's background
 
 const std::string        fontBold = "Montserrat-Bold.otf";     //Name of the Bold font
 const std::string        fontThin = "Montserrat-Regular.otf";  //Name of the Thin font
@@ -37,11 +37,11 @@ HSTREAM                   channel;                             //Initialize chan
 std::vector<std::string>   tracks;                             //Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         //Index of track used in tracks vector
 
-void playTrack() {
+void playTrack(){
 	BASS_StreamFree(channel);
 
 	std::cout << "-------------------------\nPlaying now: " << static_cast<boost::filesystem::path>(tracks[trackNow]).filename() << std::endl;
-	if (trackNow + 1 >= tracks.size()) {
+	if (trackNow + 1 >= tracks.size()){
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[0]).filename() << "\n\n\n\n";
 	} else {
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
@@ -54,24 +54,24 @@ void playTrack() {
 	BASS_ChannelPlay(channel, FALSE);
 }
 
-void shuffle(std::vector<std::string> &before) {
+void shuffle(std::vector<std::string> &before){
 	std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> uni(0, before.size());
-	for (int i = 0; i < before.size(); i++) {
+	for (int i = 0; i < before.size(); i++){
 		std::swap(before[i], before[uni(rng)]);
 	}
 }
 
-void playNext() {
+void playNext(){
 	trackNow++;
-	if (trackNow >= tracks.size()) {
+	if (trackNow >= tracks.size()){
 		trackNow = 0;
 	}
 	playTrack();
 }
 
-void windowResizing(unsigned int winW, unsigned int winH) {
+void windowResizing(unsigned int winW, unsigned int winH){
 	winWidth = winW;
 	winHeight = winH;
 	progressBarBack.setSize(sf::Vector2f(winWidth - 20, 6));
@@ -80,10 +80,10 @@ void windowResizing(unsigned int winW, unsigned int winH) {
 	progressBarFront.setPosition(10, winHeight - 16);
 }
 
-std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/") {
+std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/"){
 	std::vector<std::string> files;
-	for(auto&& x : boost::filesystem::directory_iterator(p)) {
-		if (boost::filesystem::path(x).extension() == ".mp3") {
+	for(auto&& x : boost::filesystem::directory_iterator(p)){
+		if (boost::filesystem::path(x).extension() == ".mp3"){
 			boost::filesystem::path fileTemp = x.path();
 			files.push_back(fileTemp.string());
 		}
@@ -118,8 +118,8 @@ int main(){
 	window.setKeyRepeatEnabled(false);
 
 	//Load font and change text
-	if (!fontB.loadFromFile(fontBold)) { return 1; }
-	if (!fontT.loadFromFile(fontThin)) { return 1; }
+	if (!fontB.loadFromFile(fontBold)){ return 1; }
+	if (!fontT.loadFromFile(fontThin)){ return 1; }
 	text.setFont(fontB);
 	text.setCharacterSize(24);
 	text.setFillColor(sf::Color::White);
@@ -135,18 +135,18 @@ int main(){
 	progressBarFront.setPosition(10, winHeight - 16);
 	progressBarFront.setFillColor(sf::Color::White);
 
-	for (int i = 0; i<barAmount; i++) {
+	for (int i = 0; i<barAmount; i++){
 		barRect[i].setSize(sf::Vector2f(1, 10));
 		barRect[i].setFillColor(sf::Color::White);
 		barRect[i].setPosition(10 + i * 11, winHeight - 10);
 	}
 
-	while (window.isOpen()) {
+	while (window.isOpen()){
 		//Set time and duration of track
 		time = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetPosition(channel, BASS_POS_BYTE));
 		duration = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetLength(channel, BASS_POS_BYTE));
 		progressBarFront.setSize(sf::Vector2f((winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
-		if (BASS_ChannelIsActive(channel) == BASS_ACTIVE_PLAYING) {
+		if (BASS_ChannelIsActive(channel) == BASS_ACTIVE_PLAYING){
 			text.setString(tracks[trackNow]);
 		} else {
 			playNext();
@@ -167,9 +167,9 @@ int main(){
 
 		//Set bars values
 		BASS_ChannelGetData(channel, fft, fftfreq);
-		for (int a = 0; a<barAmount; a++) {
+		for (int a = 0; a<barAmount; a++){
 			float sum = 0;
-			for (int j = 0; j<smoothBy - 1; j++) {
+			for (int j = 0; j<smoothBy - 1; j++){
 				smoothingBars[a][j] = smoothingBars[a][j + 1];
 				sum += smoothingBars[a][j];
 			}
@@ -180,14 +180,14 @@ int main(){
 
 		//Take average of bars values
 		float aveBars[barAmount];
-		for (int i = 0; i<barAmount; i++) {
+		for (int i = 0; i<barAmount; i++){
 			aveBars[i] = (bars[std::max(0, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
 		}
 
 		//Handle events
 		sf::Event event;
-		while (window.pollEvent(event)) {
-			switch (event.type) {
+		while (window.pollEvent(event)){
+			switch (event.type){
 				//If window is coming to close
 				case sf::Event::Closed:
 					window.close();
@@ -200,7 +200,7 @@ int main(){
 					break;
 				//If key is pressed
 				case sf::Event::KeyPressed:
-					if(event.key.code == sf::Keyboard::P) {
+					if(event.key.code == sf::Keyboard::P){
 						playNext();
 					}
 					break;
@@ -220,7 +220,7 @@ int main(){
 		//Draw everything on window
 		window.clear(winBackground);
 		window.draw(text);
-		for (int i = 0; i<barAmount; i++) {
+		for (int i = 0; i<barAmount; i++){
 			barRect[i].setSize(sf::Vector2f(10, static_cast<int>(aveBars[i])));
 			window.draw(barRect[i]);
 		}
