@@ -208,7 +208,7 @@ int main(){
 				case sf::Event::MouseButtonPressed:
 					if(event.mouseButton.button == 0){
 						for(int i=0; i<buttonList.size(); i++){
-							buttonClicked(buttonList[i].checkIfClicked(sf::Vector2i(event.mouseButton.x,event.mouseButton.y)));
+							buttonList[i].checkIfClicked(sf::Vector2i(event.mouseButton.x,event.mouseButton.y));
 						}
 					}
 					break;
