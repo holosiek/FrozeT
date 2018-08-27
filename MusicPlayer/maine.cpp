@@ -37,11 +37,6 @@ HSTREAM                   channel;                             //Initialize chan
 std::vector<std::string>   tracks;                             //Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         //Index of track used in tracks vector
 
-//Button List stored in std::vector
-std::vector<Button> buttonList = {
-	Button(10,30,20,20,1,cfg.lighter_grey)
-};
-
 void playTrack() {
 	BASS_StreamFree(channel);
 
@@ -96,15 +91,10 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/") {
 	return files;
 }
 
-void buttonClicked(int type){
-	switch(type){
-		case 0:
-			break;
-		case 1:
-			playNext();
-			break;
-	}
-}
+//Button List stored in std::vector
+std::vector<Button> buttonList = {
+	Button(10,30,20,20,playNext,cfg.lighter_grey)
+};
 
 int main(){
 	tracks = takeMusic();
