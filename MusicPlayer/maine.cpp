@@ -6,13 +6,14 @@
 #include <math.h>
 #include <vector>
 #include <random>
+#include <fstream>
 #include "bass.h"
 #include "mymisc.h"
 #include "config.h"
 
 Config                        cfg;                             //Class with constants and config values
 
-const short              deviceID = -1;                        //DeviceID of device that will play music, -1 = default
+const short              deviceID = 4;                        //DeviceID of device that will play music, -1 = default
 const unsigned short         freq = 44100;                     //Frequency of channel
 const unsigned short     fftarray = 2048;                      //Length of FFT array
 const unsigned short     smoothBy = 10;                        //Amount of smoothing variables
@@ -36,10 +37,14 @@ const unsigned short    barAmount = 62;                        //Amount of bars
 HSTREAM                   channel;                             //Initialize channel variable
 std::vector<std::string>   tracks;                             //Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         //Index of track used in tracks vector
+bool                    isPlaying = true;                      //Is stream playing?
 
+//Plays tracks
 void playTrack(){
+	//Free channel data
 	BASS_StreamFree(channel);
 
+	//Diplay in console "playing now"
 	std::cout << "-------------------------\nPlaying now: " << static_cast<boost::filesystem::path>(tracks[trackNow]).filename() << std::endl;
 	if (trackNow + 1 >= tracks.size()){
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[0]).filename() << "\n\n\n\n";
@@ -47,11 +52,25 @@ void playTrack(){
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
 	}
 
+	//For programs like OBS - creates text file which consists name of song
+	if(cfg.saveTitleToFile){
+		std::ofstream file("music.txt");
+		std::string toTitle   = tracks[trackNow];
+		std::size_t lastSlash = toTitle.find_last_of("/\\");
+		std::size_t lastDot   = toTitle.find_last_of(".");
+		file << tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1);
+		file.close();
+	}
+
+	//Set up channel information
 	channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
-	//channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
-	//std::cout << BASS_ErrorGetCode();
+	/*
+		channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
+		std::cout << BASS_ErrorGetCode();
+	*/
 	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.1);
 	BASS_ChannelPlay(channel, FALSE);
+	isPlaying = true;
 }
 
 void shuffle(std::vector<std::string> &before){
@@ -69,6 +88,16 @@ void playNext(){
 		trackNow = 0;
 	}
 	playTrack();
+}
+
+void pauseSong(){
+	if(isPlaying){
+		BASS_ChannelPause(channel);
+		isPlaying = !isPlaying;
+	} else {
+		BASS_ChannelPlay(channel, FALSE);
+		isPlaying = !isPlaying;
+	}
 }
 
 void windowResizing(unsigned int winW, unsigned int winH){
@@ -93,10 +122,12 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/"){
 
 //Button List stored in std::vector
 std::vector<Button> buttonList = {
-	Button(10,30,20,20,playNext,cfg.lighter_grey)
+	Button(10,30,20,20,playNext,cfg.lighter_grey),
+	Button(10,80,20,20,pauseSong,cfg.lighter_grey)
 };
 
 int main(){
+	cfg.startup();
 	tracks = takeMusic();
 	shuffle(tracks);
 	sf::RectangleShape barRect[barAmount];                  //Array of bar rectangles
@@ -104,7 +135,6 @@ int main(){
 	float bars[barAmount];                                  //Array holding bars values
 	float smoothingBars[barAmount][smoothBy] = { 0 };       //Array holding variables used for smoothing bars
 	double time, duration;                                  //Time and duration of track
-	sf::Font fontB, fontT;                                  //Variables for bold and thin fonts
 	sf::Text text;                                          //Text variable displaying time and duration
 	sf::FloatRect bounds;                                   //Bounds of time of progress bar
 
@@ -117,13 +147,11 @@ int main(){
 	window.setFramerateLimit(::winFPS);
 	window.setKeyRepeatEnabled(false);
 
-	//Load font and change text
-	if (!fontB.loadFromFile(fontBold)){ return 1; }
-	if (!fontT.loadFromFile(fontThin)){ return 1; }
-	text.setFont(fontB);
+	//Change text style and font
+	text.setFont(cfg.fBold);
 	text.setCharacterSize(24);
 	text.setFillColor(sf::Color::White);
-	progressBarTime.setFont(fontB);
+	progressBarTime.setFont(cfg.fBold);
 	progressBarTime.setCharacterSize(18);
 	progressBarTime.setFillColor(sf::Color::White);
 
@@ -146,8 +174,10 @@ int main(){
 		time = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetPosition(channel, BASS_POS_BYTE));
 		duration = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetLength(channel, BASS_POS_BYTE));
 		progressBarFront.setSize(sf::Vector2f((winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
-		if (BASS_ChannelIsActive(channel) == BASS_ACTIVE_PLAYING){
+		if(BASS_ChannelIsActive(channel) == BASS_ACTIVE_PLAYING){
 			text.setString(tracks[trackNow]);
+		} else if(BASS_ChannelIsActive(channel) == BASS_ACTIVE_PAUSED){
+			text.setString("paused");
 		} else {
 			playNext();
 			text.setString("end");
