@@ -82,7 +82,7 @@ void shuffle(std::vector<std::string> &before){
 	}
 }
 
-void playNext(){
+void playNext(std::vector<std::string> args = {}){
 	trackNow++;
 	if (trackNow >= tracks.size()){
 		trackNow = 0;
@@ -90,7 +90,8 @@ void playNext(){
 	playTrack();
 }
 
-void pauseSong(){
+void pauseSong(std::vector<std::string> args = {}){
+	std::cout << args[0] << std::endl;
 	if(isPlaying){
 		BASS_ChannelPause(channel);
 		isPlaying = !isPlaying;

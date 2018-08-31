@@ -24,25 +24,26 @@ void Button::draw(sf::RenderWindow &win){
 //Check if mouse is clicking on the button
 int Button::checkIfClicked(sf::Vector2i mousePos){
 	if(mousePos.x >= posX && mousePos.x <= (posX+width) && mousePos.y >= posY && mousePos.y <= (posY+height)){
-		funcOnClick();
+		funcOnClick(funcArgs);
 	} else {
 		return 0;
 	}
 }
 
 //Button constructors
-Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(), sf::Color back){
+Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments, sf::Color back){
 	posX = x;
 	posY = y;
 	width = wid;
 	height = hei;
 	background = back;
 	funcOnClick = funk;
+	funcArgs = arguments;
 	border.setFillColor(back);
 	updateButton();
 }
-Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)()){
-	Button(x,y,wid,hei,funk,sf::Color(0,0,0,0));
+Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments){
+	Button(x,y,wid,hei,funk,arguments,sf::Color(0,0,0,0));
 }
 
 //Return string with length of 2
