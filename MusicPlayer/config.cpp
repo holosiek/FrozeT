@@ -14,3 +14,11 @@ void Config::startup(){
 		//Error callback
 	}
 }
+
+//Default constructor
+Config::Config(){
+	startup();
+}
+
+//Declare Config object
+Config cfg;

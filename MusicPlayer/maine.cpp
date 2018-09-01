@@ -11,9 +11,7 @@
 #include "mymisc.h"
 #include "config.h"
 
-Config                        cfg;                             //Class with constants and config values
-
-const short              deviceID = 4;                        //DeviceID of device that will play music, -1 = default
+const short              deviceID = 4;                         //DeviceID of device that will play music, -1 = default
 const unsigned short         freq = 44100;                     //Frequency of channel
 const unsigned short     fftarray = 2048;                      //Length of FFT array
 const unsigned short     smoothBy = 10;                        //Amount of smoothing variables
@@ -91,7 +89,6 @@ void playNext(std::vector<std::string> args = {}){
 }
 
 void pauseSong(std::vector<std::string> args = {}){
-	std::cout << args[0] << std::endl;
 	if(isPlaying){
 		BASS_ChannelPause(channel);
 		isPlaying = !isPlaying;
@@ -123,12 +120,11 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/"){
 
 //Button List stored in std::vector
 std::vector<Button> buttonList = {
-	Button(10,30,20,20,playNext,cfg.lighter_grey),
-	Button(10,80,20,20,pauseSong,cfg.lighter_grey)
+	Button("Next song",10,30,20,20,playNext,{},cfg.lighter_grey),
+	Button("Pause song",10,60,20,20,pauseSong,{},cfg.lighter_grey)
 };
 
 int main(){
-	cfg.startup();
 	tracks = takeMusic();
 	shuffle(tracks);
 	sf::RectangleShape barRect[barAmount];                  //Array of bar rectangles

@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include "bass.h"
 #include "mymisc.h"
+#include "config.h"
 
 /*
 	Button class
@@ -19,6 +20,9 @@ void Button::updateButton(){
 //Draw Button on the screen
 void Button::draw(sf::RenderWindow &win){
 	win.draw(border);
+	textDisplayer.setString(text);
+	win.draw(textDisplayer);
+
 }
 
 //Check if mouse is clicking on the button
@@ -31,7 +35,7 @@ int Button::checkIfClicked(sf::Vector2i mousePos){
 }
 
 //Button constructors
-Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments, sf::Color back){
+Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments, sf::Color back){
 	posX = x;
 	posY = y;
 	width = wid;
@@ -40,10 +44,18 @@ Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned shor
 	funcOnClick = funk;
 	funcArgs = arguments;
 	border.setFillColor(back);
+
+	// Default text properties
+	text = name;
+	textDisplayer.setFont(cfg.fNormal);
+	textDisplayer.setCharacterSize(16);
+	textDisplayer.setFillColor(sf::Color::Black);
+	textDisplayer.setPosition(posX,posY);
+
 	updateButton();
 }
-Button::Button(unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments){
-	Button(x,y,wid,hei,funk,arguments,sf::Color(0,0,0,0));
+Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments){
+	Button(name,x,y,wid,hei,funk,arguments,sf::Color(0,0,0,0));
 }
 
 //Return string with length of 2

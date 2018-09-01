@@ -28,6 +28,9 @@ class Config {
 		const sf::Color white         = sf::Color(255,255,255,255);
 
 		void startup();
+		Config();
 };
+
+extern Config cfg;
 
 #endif
