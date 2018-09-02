@@ -10,6 +10,9 @@ void Config::startup(){
 	if (!fBold.loadFromFile(s_fBold)){ 
 		//Error callback
 	}
+	if (!fRegular.loadFromFile(s_fRegular)){ 
+		//Error callback
+	}
 	if (!fNormal.loadFromFile(s_fNormal)){ 
 		//Error callback
 	}

@@ -22,7 +22,6 @@ void Button::draw(sf::RenderWindow &win){
 	win.draw(border);
 	textDisplayer.setString(text);
 	win.draw(textDisplayer);
-
 }
 
 //Check if mouse is clicking on the button
@@ -38,8 +37,6 @@ int Button::checkIfClicked(sf::Vector2i mousePos){
 Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments, sf::Color back){
 	posX = x;
 	posY = y;
-	width = wid;
-	height = hei;
 	background = back;
 	funcOnClick = funk;
 	funcArgs = arguments;
@@ -50,7 +47,11 @@ Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short 
 	textDisplayer.setFont(cfg.fNormal);
 	textDisplayer.setCharacterSize(16);
 	textDisplayer.setFillColor(sf::Color::Black);
-	textDisplayer.setPosition(posX,posY);
+	textDisplayer.setPosition(x+wid-1,y+hei-4);     //These numbers fixes padding problems
+	textDisplayer.setString(text);
+
+	width = textDisplayer.getGlobalBounds().width + wid*2;
+	height = textDisplayer.getGlobalBounds().height + hei*2;
 
 	updateButton();
 }

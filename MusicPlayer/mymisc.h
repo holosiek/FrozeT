@@ -6,8 +6,8 @@ class Button{
 		// Button properties
 		unsigned int posX = 0;                          //Position X on screen
 		unsigned int posY = 0;                          //Position Y on screen
-		unsigned short width = 0;                       //Width of button
-		unsigned short height = 0;                      //Height of button
+		unsigned short width = 0;                       //Width of button (Padding)
+		unsigned short height = 0;                      //Height of button (Padding)
 		// Text to display
 		std::string text = "";                          //Text written on the button
 		sf::Text textDisplayer;                         //Text object

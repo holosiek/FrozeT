@@ -4,8 +4,9 @@
 class Config {
 	private:
 		// Name of fonts
-		const std::string s_fBold     = "Montserrat-Bold.otf";      //Bold
-		const std::string s_fNormal   = "Montserrat-Regular.otf";   //Regular
+		const std::string s_fBold     = "Montserrat-Bold.otf";      //Bold Montserrat
+		const std::string s_fRegular  = "Montserrat-Regular.otf";   //Regular Montserrat
+		const std::string s_fNormal   = "PT-Sans-Normal.ttf";       //Normal PT Sans
 	public:
 		// If true, window that is unfocused will has max 15 fps to save some GPU power
 		const bool saveEnergy         = false;
@@ -13,7 +14,7 @@ class Config {
 		const bool saveTitleToFile    = true;
 
 		// Fonts
-		sf::Font fBold, fNormal;
+		sf::Font fBold, fRegular, fNormal;
 		// Red/Green/Blue colors
 		const sf::Color red           = sf::Color(255,0,0,255);
 		const sf::Color green         = sf::Color(0,255,0,255);

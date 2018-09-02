@@ -120,8 +120,8 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/"){
 
 //Button List stored in std::vector
 std::vector<Button> buttonList = {
-	Button("Next song",10,30,20,20,playNext,{},cfg.lighter_grey),
-	Button("Pause song",10,60,20,20,pauseSong,{},cfg.lighter_grey)
+	Button("Next song",10,30,5,5,playNext,{},cfg.lighter_grey),
+	Button("Pause song",10,60,5,5,pauseSong,{},cfg.lighter_grey)
 };
 
 int main(){
