@@ -47,11 +47,11 @@ Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short 
 	textDisplayer.setFont(cfg.fNormal);
 	textDisplayer.setCharacterSize(16);
 	textDisplayer.setFillColor(sf::Color::Black);
-	textDisplayer.setPosition(x+wid-1,y+hei-4);     //These numbers fixes padding problems
 	textDisplayer.setString(text);
 
 	width = textDisplayer.getGlobalBounds().width + wid*2;
 	height = textDisplayer.getGlobalBounds().height + hei*2;
+	textDisplayer.setPosition(x-textDisplayer.getGlobalBounds().left+wid,y+hei-textDisplayer.getGlobalBounds().top);   //Set position of text [1]
 
 	updateButton();
 }
