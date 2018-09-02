@@ -88,6 +88,14 @@ void playNext(std::vector<std::string> args = {}){
 	playTrack();
 }
 
+void playPrevious(std::vector<std::string> args = {}){
+	trackNow--;
+	if (trackNow < 0){
+		trackNow = tracks.size()-1;
+	}
+	playTrack();
+}
+
 void pauseSong(std::vector<std::string> args = {}){
 	if(isPlaying){
 		BASS_ChannelPause(channel);
@@ -107,7 +115,7 @@ void windowResizing(unsigned int winW, unsigned int winH){
 	progressBarFront.setPosition(10, winHeight - 16);
 }
 
-std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/"){
+std::vector<std::string> takeMusic(boost::filesystem::path p = "F:\\Music\\"){
 	std::vector<std::string> files;
 	for(auto&& x : boost::filesystem::directory_iterator(p)){
 		if (boost::filesystem::path(x).extension() == ".mp3"){
@@ -121,6 +129,7 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:/Music/"){
 //Button List stored in std::vector
 std::vector<Button> buttonList = {
 	Button("Next song",10,30,5,5,playNext,{},cfg.lighter_grey),
+	Button("Previous song",10,90,5,5,playPrevious,{},cfg.lighter_grey),
 	Button("Pause song",10,60,5,5,pauseSong,{},cfg.lighter_grey)
 };
 

@@ -22,6 +22,10 @@ class Button{
 		void updateButton();
 		void draw(sf::RenderWindow &win);
 		int checkIfClicked(sf::Vector2i mousePos);
+		// Properties changers
+		void setText(std::string str);
+		void setFont(sf::Font font);
+		void setFontSize(unsigned int size);
 		// Constructors
 		Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments, sf::Color back);
 		Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments);

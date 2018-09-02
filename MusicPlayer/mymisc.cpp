@@ -11,6 +11,22 @@
 	Button class
 */
 
+//Set button text
+void Button::setText(std::string str){
+	text = str;
+	textDisplayer.setString(text);
+}
+
+//Set button font
+void Button::setFont(sf::Font font){
+	textDisplayer.setFont(font);
+}
+
+//Set button font size
+void Button::setFontSize(unsigned int size){
+	textDisplayer.setCharacterSize(size);
+}
+
 //Update button size
 void Button::updateButton(){
 	border.setSize(sf::Vector2f(width,height));
