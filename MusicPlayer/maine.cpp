@@ -1,13 +1,28 @@
+//SFML
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+//Boost
 #include <boost/filesystem.hpp>
+//Standard
 #include <iostream>
 #include <string>
 #include <math.h>
 #include <vector>
 #include <random>
 #include <fstream>
+//TagLib
+#include <tag.h>
+#include <fileref.h>
+#include <mpegfile.h>
+
+#include <id3v2tag.h>
+#include <id3v2frame.h>
+#include <id3v2header.h>
+#include <attachedpictureframe.h>
+#include <id3v1tag.h>
+//Bass
 #include "bass.h"
+//Project Related
 #include "mymisc.h"
 #include "config.h"
 
@@ -36,6 +51,49 @@ HSTREAM                   channel;                             //Initialize chan
 std::vector<std::string>   tracks;                             //Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         //Index of track used in tracks vector
 bool                    isPlaying = true;                      //Is stream playing?
+
+sf::Sprite sprite;
+sf::Texture texture;
+sf::Shader shader;
+void refreshAlbum(){
+	static const char *IdPicture = "APIC";
+	TagLib::MPEG::File f(tracks[trackNow].c_str());
+	TagLib::ID3v2::Tag *id3v2tag = f.ID3v2Tag();
+	TagLib::ID3v2::FrameList Frame ;
+	TagLib::ID3v2::AttachedPictureFrame *PicFrame;
+	if (id3v2tag){
+		Frame = id3v2tag->frameListMap()[IdPicture];
+		void *SrcImage;
+		unsigned long Size ;
+		if (!Frame.isEmpty()){
+			for(TagLib::ID3v2::FrameList::ConstIterator it = Frame.begin(); it != Frame.end(); ++it){
+				PicFrame = (TagLib::ID3v2::AttachedPictureFrame *)(*it) ;
+				if ( PicFrame->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover){
+					Size = PicFrame->picture().size() ;
+					SrcImage = malloc (Size) ;
+					if (SrcImage){
+						memcpy ( SrcImage, PicFrame->picture().data(), Size ) ;
+						if(!texture.loadFromMemory(SrcImage,Size)){
+							std::cout << "problem?";
+						} else {
+							float ratio;
+							sprite.setTexture(texture);
+							sprite.setPosition(sf::Vector2f(winWidth/2, winHeight/2));
+							texture.setSmooth(true);
+							if(winWidth>winHeight){
+								ratio = winWidth/sprite.getLocalBounds().width;
+							} else {
+								ratio = winHeight/sprite.getLocalBounds().height;
+							}
+							sprite.setOrigin(sf::Vector2f(sprite.getLocalBounds().width/2,sprite.getLocalBounds().height/2));
+							sprite.setScale(sf::Vector2f(ratio,ratio));
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 //Plays tracks
 void playTrack(){
@@ -69,6 +127,7 @@ void playTrack(){
 	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.1);
 	BASS_ChannelPlay(channel, FALSE);
 	isPlaying = true;
+	refreshAlbum();
 }
 
 void shuffle(std::vector<std::string> &before){
@@ -134,6 +193,10 @@ std::vector<Button> buttonList = {
 };
 
 int main(){
+	if (!shader.loadFromFile("shad.vert", "shad.frag")){
+		std::cout << "problem?";
+	}
+
 	tracks = takeMusic();
 	shuffle(tracks);
 	sf::RectangleShape barRect[barAmount];                  //Array of bar rectangles
@@ -233,6 +296,7 @@ int main(){
 				case sf::Event::Resized:
 					window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
 					windowResizing(event.size.width, event.size.height);
+					refreshAlbum();
 					break;
 				//If key is pressed
 				case sf::Event::KeyPressed:
@@ -255,6 +319,7 @@ int main(){
 
 		//Draw everything on window
 		window.clear(winBackground);
+		window.draw(sprite,&shader);
 		window.draw(text);
 		for (int i = 0; i<barAmount; i++){
 			barRect[i].setSize(sf::Vector2f(10, static_cast<int>(aveBars[i])));

@@ -122,14 +122,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>F:\C++\SFML-2.5.0x86\include;F:\C++\bass24;F:\C++\boost_1_67_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\C++\SFML-2.5.0x86\include;F:\C++\bass24;F:\C++\boost_1_67_0;E:\TagLib\taglib;E:\TagLib\taglib\toolkit;E:\TagLib\taglib\mpeg;E:\TagLib\taglib\mpeg\id3v2;E:\TagLib\taglib\mpeg\id3v2\frames;E:\TagLib\taglib\mpeg\id3v1</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>F:\C++\SFML-2.5.0x86\lib;F:\C++\bass24;F:\C++\boost_1_67_0\stage\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bass.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\C++\SFML-2.5.0x86\lib;F:\C++\bass24;F:\C++\boost_1_67_0\stage\lib;E:\TagLib\taglib\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bass.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;tag.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
