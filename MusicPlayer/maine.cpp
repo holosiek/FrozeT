@@ -14,12 +14,11 @@
 #include <tag.h>
 #include <fileref.h>
 #include <mpegfile.h>
-
+#include <id3v1tag.h>
 #include <id3v2tag.h>
 #include <id3v2frame.h>
 #include <id3v2header.h>
 #include <attachedpictureframe.h>
-#include <id3v1tag.h>
 //Bass
 #include "bass.h"
 //Project Related
@@ -37,9 +36,6 @@ unsigned short          winHeight = 480;                       //Window height
 const unsigned short       winFPS = 60;                        //Window fps
 const std::string        winTitle = "Ceplusplus";              //Window title
 sf::Color           winBackground = cfg.grey;                  //Color of the window's background
-
-const std::string        fontBold = "Montserrat-Bold.otf";     //Name of the Bold font
-const std::string        fontThin = "Montserrat-Regular.otf";  //Name of the Thin font
 
 sf::RectangleShape progressBarBack, progressBarFront;          //Rectangles of progress bar
 sf::Text          progressBarTime;                             //Time display on progress bar
@@ -67,27 +63,25 @@ void refreshAlbum(){
 		unsigned long Size ;
 		if (!Frame.isEmpty()){
 			for(TagLib::ID3v2::FrameList::ConstIterator it = Frame.begin(); it != Frame.end(); ++it){
-				PicFrame = (TagLib::ID3v2::AttachedPictureFrame *)(*it) ;
-				if ( PicFrame->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover){
-					Size = PicFrame->picture().size() ;
-					SrcImage = malloc (Size) ;
-					if (SrcImage){
-						memcpy ( SrcImage, PicFrame->picture().data(), Size ) ;
-						if(!texture.loadFromMemory(SrcImage,Size)){
-							std::cout << "problem?";
+				PicFrame = (TagLib::ID3v2::AttachedPictureFrame*)(*it);
+				Size = PicFrame->picture().size() ;
+				SrcImage = malloc (Size) ;
+				if (SrcImage){
+					memcpy ( SrcImage, PicFrame->picture().data(), Size ) ;
+					if(!texture.loadFromMemory(SrcImage,Size)){
+						std::cout << "problem?";
+					} else {
+						float ratio;
+						sprite.setTexture(texture);
+						sprite.setPosition(sf::Vector2f(winWidth/2, winHeight/2));
+						texture.setSmooth(true);
+						if(winWidth>winHeight){
+							ratio = winWidth/sprite.getLocalBounds().width;
 						} else {
-							float ratio;
-							sprite.setTexture(texture);
-							sprite.setPosition(sf::Vector2f(winWidth/2, winHeight/2));
-							texture.setSmooth(true);
-							if(winWidth>winHeight){
-								ratio = winWidth/sprite.getLocalBounds().width;
-							} else {
-								ratio = winHeight/sprite.getLocalBounds().height;
-							}
-							sprite.setOrigin(sf::Vector2f(sprite.getLocalBounds().width/2,sprite.getLocalBounds().height/2));
-							sprite.setScale(sf::Vector2f(ratio,ratio));
+							ratio = winHeight/sprite.getLocalBounds().height;
 						}
+						sprite.setOrigin(sf::Vector2f(sprite.getLocalBounds().width/2,sprite.getLocalBounds().height/2));
+						sprite.setScale(sf::Vector2f(ratio,ratio));
 					}
 				}
 			}
@@ -213,7 +207,7 @@ int main(){
 
 	//Initialize window frame
 	sf::RenderWindow window(sf::VideoMode(winWidth, winHeight), winTitle);
-	window.setFramerateLimit(::winFPS);
+	window.setVerticalSyncEnabled(false);
 	window.setKeyRepeatEnabled(false);
 
 	//Change text style and font
