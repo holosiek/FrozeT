@@ -8,13 +8,62 @@ class Config {
 		const std::string s_fRegular  = "Montserrat-Regular.otf";   //Regular Montserrat
 		const std::string s_fNormal   = "PT-Sans-Normal.ttf";       //Normal PT Sans
 	public:
+		/* #########################################
+			 ___      _   _   _              
+			/ __| ___| |_| |_(_)_ _  __ _ ___
+			\__ \/ -_)  _|  _| | ' \/ _` (_-<
+			|___/\___|\__|\__|_|_||_\__, /__/
+									|___/    
+
+		*/
 		// If true, window that is unfocused will has max 15 fps to save some GPU power
 		const bool saveEnergy         = false;
 		// If true, saves title of the song into the file inside working directory
 		const bool saveTitleToFile    = true;
 
+
+		/* #########################################
+			  ___ _                       _ 
+			 / __| |_  __ _ _ _  _ _  ___| |
+			| (__| ' \/ _` | ' \| ' \/ -_) |
+			 \___|_||_\__,_|_||_|_||_\___|_|
+                                
+		*/
+		// DeviceID of device that will play music, -1 = default
+		const short deviceID          = 4;
+		// Sampling frequency of channel
+		const unsigned short freq     = 44100;
+		// Freq of samples
+		const DWORD fftfreq           = BASS_DATA_FFT4096;
+
+
+		/* #########################################
+			__      ___         _            
+			\ \    / (_)_ _  __| |_____ __ __
+			 \ \/\/ /| | ' \/ _` / _ \ V  V /
+			  \_/\_/ |_|_||_\__,_\___/\_/\_/ 
+                                 
+		*/
+		// Window width ad height
+		unsigned short winWidth       = 960;
+		unsigned short winHeight      = 480;
+		// Window fps
+		const unsigned short winFPS   = 60;
+		// Window title
+		const std::string winTitle    = "FrozeT";
+
+
+		/* #########################################
+			 __  __ _        
+			|  \/  (_)___ __ 
+			| |\/| | (_-</ _|
+			|_|  |_|_/__/\__|
+                 
+		*/
 		// Fonts
 		sf::Font fBold, fRegular, fNormal;
+		// Shaders
+		sf::Shader shader_brightness;
 		// Red/Green/Blue colors
 		const sf::Color red           = sf::Color(255,0,0,255);
 		const sf::Color green         = sf::Color(0,255,0,255);
@@ -34,4 +83,4 @@ class Config {
 
 extern Config cfg;
 
-#endif
+#endif CONFIG

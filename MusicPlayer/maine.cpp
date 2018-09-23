@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <cmath>
 #include <vector>
 #include <random>
 #include <fstream>
@@ -25,17 +26,7 @@
 #include "mymisc.h"
 #include "config.h"
 
-const short              deviceID = 4;                         //DeviceID of device that will play music, -1 = default
-const unsigned short         freq = 44100;                     //Frequency of channel
-const unsigned short     fftarray = 2048;                      //Length of FFT array
 const unsigned short     smoothBy = 10;                        //Amount of smoothing variables
-const DWORD               fftfreq = BASS_DATA_FFT4096;         //Freq of samples
-
-unsigned short           winWidth = 960;                       //Window width
-unsigned short          winHeight = 480;                       //Window height
-const unsigned short       winFPS = 60;                        //Window fps
-const std::string        winTitle = "Ceplusplus";              //Window title
-sf::Color           winBackground = cfg.grey;                  //Color of the window's background
 
 sf::RectangleShape progressBarBack, progressBarFront;          //Rectangles of progress bar
 sf::Text          progressBarTime;                             //Time display on progress bar
@@ -48,9 +39,19 @@ std::vector<std::string>   tracks;                             //Initialize trac
 int                      trackNow = 0;                         //Index of track used in tracks vector
 bool                    isPlaying = true;                      //Is stream playing?
 
+sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle);
+
+int barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
+
+sf::RectangleShape barRect[barAmount];                  //Array of bar rectangles
 sf::Sprite sprite;
 sf::Texture texture;
-sf::Shader shader;
+std::string title;
+std::string author;
+double smallk(float x, double y){
+	return (x > y) ? x : y;
+}
+
 void refreshAlbum(){
 	static const char *IdPicture = "APIC";
 	TagLib::MPEG::File f(tracks[trackNow].c_str());
@@ -73,12 +74,12 @@ void refreshAlbum(){
 					} else {
 						float ratio;
 						sprite.setTexture(texture);
-						sprite.setPosition(sf::Vector2f(winWidth/2, winHeight/2));
+						sprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
 						texture.setSmooth(true);
-						if(winWidth>winHeight){
-							ratio = winWidth/sprite.getLocalBounds().width;
+						if(cfg.winWidth>cfg.winHeight){
+							ratio = cfg.winWidth/sprite.getLocalBounds().width;
 						} else {
-							ratio = winHeight/sprite.getLocalBounds().height;
+							ratio = cfg.winHeight/sprite.getLocalBounds().height;
 						}
 						sprite.setOrigin(sf::Vector2f(sprite.getLocalBounds().width/2,sprite.getLocalBounds().height/2));
 						sprite.setScale(sf::Vector2f(ratio,ratio));
@@ -102,15 +103,22 @@ void playTrack(){
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
 	}
 
+	std::string toTitle     = tracks[trackNow];
+	std::size_t lastSlash   = toTitle.find_last_of("/\\");
+	std::size_t lastDot     = toTitle.find_last_of(".");
 	//For programs like OBS - creates text file which consists name of song
 	if(cfg.saveTitleToFile){
 		std::ofstream file("music.txt");
-		std::string toTitle   = tracks[trackNow];
-		std::size_t lastSlash = toTitle.find_last_of("/\\");
-		std::size_t lastDot   = toTitle.find_last_of(".");
 		file << tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1);
 		file.close();
 	}
+	std::size_t lastHyphen  = toTitle.find_last_of("-");
+	author = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
+	// Author to uppercase
+	for(int i=0; i<author.size(); i++){ author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; }
+	title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
+
+	window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + " | FrozeT");
 
 	//Set up channel information
 	channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
@@ -118,7 +126,7 @@ void playTrack(){
 		channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
 		std::cout << BASS_ErrorGetCode();
 	*/
-	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.1);
+	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.1f);
 	BASS_ChannelPlay(channel, FALSE);
 	isPlaying = true;
 	refreshAlbum();
@@ -160,17 +168,23 @@ void pauseSong(std::vector<std::string> args = {}){
 }
 
 void windowResizing(unsigned int winW, unsigned int winH){
-	winWidth = winW;
-	winHeight = winH;
-	progressBarBack.setSize(sf::Vector2f(winWidth - 20, 6));
-	progressBarBack.setPosition(10, winHeight - 16);
-	progressBarFront.setSize(sf::Vector2f(winWidth - 20, 6));
-	progressBarFront.setPosition(10, winHeight - 16);
+	cfg.winWidth = winW;
+	cfg.winHeight = winH;
+	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
+	progressBarBack.setPosition(10, cfg.winHeight - 16);
+	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
+	progressBarFront.setPosition(10, cfg.winHeight - 16);
+	for (int i = 0; i<barAmount; i++){
+		barRect[i].setSize(sf::Vector2f(1, 10));
+		barRect[i].setFillColor(sf::Color::White);
+		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
+	}
+	barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 }
 
 std::vector<std::string> takeMusic(boost::filesystem::path p = "F:\\Music\\"){
 	std::vector<std::string> files;
-	for(auto&& x : boost::filesystem::directory_iterator(p)){
+	for(auto x : boost::filesystem::directory_iterator(p)){
 		if (boost::filesystem::path(x).extension() == ".mp3"){
 			boost::filesystem::path fileTemp = x.path();
 			files.push_back(fileTemp.string());
@@ -186,80 +200,84 @@ std::vector<Button> buttonList = {
 	Button("Pause song",10,60,5,5,pauseSong,{},cfg.lighter_grey)
 };
 
-int main(){
-	if (!shader.loadFromFile("shad.vert", "shad.frag")){
-		std::cout << "problem?";
-	}
 
+/* #######################################################
+	 __  __      _         __              _   _          
+	|  \/  |__ _(_)_ _    / _|_  _ _ _  __| |_(_)___ _ _  
+	| |\/| / _` | | ' \  |  _| || | ' \/ _|  _| / _ \ ' \ 
+	|_|  |_\__,_|_|_||_| |_|  \_,_|_||_\__|\__|_\___/_||_|  
+
+   #######################################################   */
+
+int main(){
 	tracks = takeMusic();
 	shuffle(tracks);
-	sf::RectangleShape barRect[barAmount];                  //Array of bar rectangles
-	float fft[fftarray];                                    //FFT array (1/2 of freq of samples)
+	float fft[2048];                                        //FFT array (1/2 of freq of samples)
 	float bars[barAmount];                                  //Array holding bars values
 	float smoothingBars[barAmount][smoothBy] = { 0 };       //Array holding variables used for smoothing bars
 	double time, duration;                                  //Time and duration of track
-	sf::Text text;                                          //Text variable displaying time and duration
 	sf::FloatRect bounds;                                   //Bounds of time of progress bar
+	const sf::Color winBackground = cfg.grey;                  //Color of the window's background
+
+	sf::RectangleShape albumCover;                                  //Album cover image near title and author
+	sf::Text titleText;
+	sf::Text authorText;
+
 
 	//Initialize BASS and play track
-	BASS_Init(deviceID, freq, 0, 0, NULL);
+	BASS_Init(cfg.deviceID, cfg.freq, 0, 0, NULL);
 	playTrack();
 
 	//Initialize window frame
-	sf::RenderWindow window(sf::VideoMode(winWidth, winHeight), winTitle);
-	window.setVerticalSyncEnabled(false);
+	window.setVerticalSyncEnabled(true);
 	window.setKeyRepeatEnabled(false);
 
 	//Change text style and font
-	text.setFont(cfg.fBold);
-	text.setCharacterSize(24);
-	text.setFillColor(sf::Color::White);
 	progressBarTime.setFont(cfg.fBold);
 	progressBarTime.setCharacterSize(18);
 	progressBarTime.setFillColor(sf::Color::White);
 
 	//Set progress bar
-	progressBarBack.setSize(sf::Vector2f(winWidth - 20, 6));
-	progressBarBack.setPosition(10, winHeight - 16);
+	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
+	progressBarBack.setPosition(10, cfg.winHeight - 16);
 	progressBarBack.setFillColor(sf::Color(40, 40, 40, 255));
-	progressBarFront.setSize(sf::Vector2f(winWidth - 20, 6));
-	progressBarFront.setPosition(10, winHeight - 16);
+	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
+	progressBarFront.setPosition(10, cfg.winHeight - 16);
 	progressBarFront.setFillColor(sf::Color::White);
 
 	for (int i = 0; i<barAmount; i++){
 		barRect[i].setSize(sf::Vector2f(1, 10));
 		barRect[i].setFillColor(sf::Color::White);
-		barRect[i].setPosition(10 + i * 11, winHeight - 10);
+		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
 	}
 
 	while (window.isOpen()){
 		//Set time and duration of track
 		time = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetPosition(channel, BASS_POS_BYTE));
 		duration = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetLength(channel, BASS_POS_BYTE));
-		progressBarFront.setSize(sf::Vector2f((winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
+		progressBarFront.setSize(sf::Vector2f((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
 		if(BASS_ChannelIsActive(channel) == BASS_ACTIVE_PLAYING){
-			text.setString(tracks[trackNow]);
+			// Music is playing STATE
 		} else if(BASS_ChannelIsActive(channel) == BASS_ACTIVE_PAUSED){
-			text.setString("paused");
+			// Music is paused STATE
 		} else {
 			playNext();
-			text.setString("end");
 		}
 
 		//Save GPU power while unfocused
-		if(!window.hasFocus() && cfg.saveEnergy == true){
-			window.setFramerateLimit(15);
-		} else {
-			window.setFramerateLimit(winFPS);
-		}
+		//if(!window.hasFocus() && cfg.saveEnergy == true){
+		//	window.setFramerateLimit(15);
+		//} else {
+		//	window.setFramerateLimit(cfg.winFPS);
+		//}
 
 		//Change progress bar time
 		progressBarTime.setString(toHumanTime(time) + "/" + toHumanTime(duration));
 		bounds = progressBarTime.getLocalBounds();
-		progressBarTime.setPosition(winWidth - 10 - bounds.width, winHeight - 42);
+		progressBarTime.setPosition(cfg.winWidth - 10 - bounds.width, cfg.winHeight - 42);
 
 		//Set bars values
-		BASS_ChannelGetData(channel, fft, fftfreq);
+		BASS_ChannelGetData(channel, fft, cfg.fftfreq);
 		for (int a = 0; a<barAmount; a++){
 			float sum = 0;
 			for (int j = 0; j<smoothBy - 1; j++){
@@ -268,7 +286,7 @@ int main(){
 			}
 			smoothingBars[a][smoothBy - 1] = fft[a];
 			sum += smoothingBars[a][smoothBy - 1];
-			bars[a] = sqrt(sum / smoothBy)*-600 - 1;
+			bars[a] = sqrt(sum / smoothBy)*-1*(cfg.winHeight*0.6) - 1;
 		}
 
 		//Take average of bars values
@@ -311,12 +329,23 @@ int main(){
 			}
 		}
 
+		albumCover.setTexture(&texture);
+		albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
+		albumCover.setSize(sf::Vector2f(128,128));
+		authorText.setString(author);
+		authorText.setFont(cfg.fBold);
+		authorText.setCharacterSize(50);
+		authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
+		titleText.setString(title);
+		titleText.setFont(cfg.fRegular);
+		titleText.setCharacterSize(30);
+		titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
+
 		//Draw everything on window
 		window.clear(winBackground);
-		window.draw(sprite,&shader);
-		window.draw(text);
+		window.draw(sprite,&cfg.shader_brightness);
 		for (int i = 0; i<barAmount; i++){
-			barRect[i].setSize(sf::Vector2f(10, static_cast<int>(aveBars[i])));
+			barRect[i].setSize(sf::Vector2f(barWidth, smallk(aveBars[i],cfg.winHeight*-0.35) ));
 			window.draw(barRect[i]);
 		}
 		window.draw(progressBarBack);
@@ -325,9 +354,11 @@ int main(){
 		for(int i=0; i<buttonList.size(); i++){
 			buttonList[i].draw(window);
 		}
+		window.draw(albumCover);
+		window.draw(authorText);
+		window.draw(titleText);
 		window.display();
 	}
 
-	system("pause");
 	return 0;
 }
