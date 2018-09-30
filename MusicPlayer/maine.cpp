@@ -43,18 +43,16 @@ sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle
 int barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 
 
-//nwm co z tym
-std::string title, author;                                     //Variables holding title and author of music
-sf::RectangleShape progressBarBack, progressBarFront;          //Rectangles of progress bar
-sf::Text          progressBarTime;                             //Time display on progress bar
-sf::RectangleShape barRect[barAmount];
-sf::RectangleShape barRectShadow[barAmount]; 
-sf::Sprite albumCoverSprite;
-sf::Texture texture;
-	sf::RectangleShape albumCover;                                  //Album cover image near title and author
-	sf::Text titleText; sf::Text titleTextShadow;
-	sf::Text authorText; sf::Text authorTextShadow;
-//zrobic mam
+std::string title, author;                                     // Variables holding title and author of music
+sf::RectangleShape progressBarBack, progressBarFront;          // Rectangles of progress bar
+sf::Text progressBarTime;                                      // Time display on progress bar
+sf::RectangleShape barRect[barAmount];                         // Visualizer bars
+sf::RectangleShape barRectShadow[barAmount];                   // Visualizer bars shadow
+sf::Sprite albumCoverSprite;                                   // Sprite of album cover image
+sf::Texture texture;                                           // Texture of album cover image
+sf::RectangleShape albumCover;                                 // Album cover image near title and author
+sf::Text titleText; sf::Text titleTextShadow;                  // Title text and it's shadow
+sf::Text authorText; sf::Text authorTextShadow;                // Author text and it's shadow
 
 
 /*
