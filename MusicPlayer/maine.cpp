@@ -26,15 +26,14 @@
 #include "mymisc.h"
 #include "config.h"
 
-const unsigned short     smoothBy = 10;                        //Amount of smoothing variables
 
-sf::RectangleShape progressBarBack, progressBarFront;          //Rectangles of progress bar
-sf::Text          progressBarTime;                             //Time display on progress bar
+const unsigned short     smoothBy = 9;                        //Amount of smoothing variables
+
 
 unsigned short            barSize = 10;                        //Size of bars
 const unsigned short    barAmount = 62;                        //Amount of bars
 
-HSTREAM                   channel;                             //Initialize channel variable
+HSTREAM                   channel = 0;                         //Initialize channel variable
 std::vector<std::string>   tracks;                             //Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         //Index of track used in tracks vector
 bool                    isPlaying = true;                      //Is stream playing?
@@ -43,46 +42,61 @@ sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle
 
 int barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 
-sf::RectangleShape barRect[barAmount];                  //Array of bar rectangles
-sf::Sprite sprite;
+
+//nwm co z tym
+std::string title, author;                                     //Variables holding title and author of music
+sf::RectangleShape progressBarBack, progressBarFront;          //Rectangles of progress bar
+sf::Text          progressBarTime;                             //Time display on progress bar
+sf::RectangleShape barRect[barAmount];
+sf::RectangleShape barRectShadow[barAmount]; 
+sf::Sprite albumCoverSprite;
 sf::Texture texture;
-std::string title;
-std::string author;
-double smallk(float x, double y){
-	return (x > y) ? x : y;
-}
+	sf::RectangleShape albumCover;                                  //Album cover image near title and author
+	sf::Text titleText; sf::Text titleTextShadow;
+	sf::Text authorText; sf::Text authorTextShadow;
+//zrobic mam
+
+
+/*
+################################## Load album image from file using TagLib
+*/
 
 void refreshAlbum(){
-	static const char *IdPicture = "APIC";
+	// Load MP3 file which will be used to extract album cover and check for ID3v2 tag
 	TagLib::MPEG::File f(tracks[trackNow].c_str());
 	TagLib::ID3v2::Tag *id3v2tag = f.ID3v2Tag();
-	TagLib::ID3v2::FrameList Frame ;
-	TagLib::ID3v2::AttachedPictureFrame *PicFrame;
-	if (id3v2tag){
-		Frame = id3v2tag->frameListMap()[IdPicture];
-		void *SrcImage;
-		unsigned long Size ;
-		if (!Frame.isEmpty()){
-			for(TagLib::ID3v2::FrameList::ConstIterator it = Frame.begin(); it != Frame.end(); ++it){
-				PicFrame = (TagLib::ID3v2::AttachedPictureFrame*)(*it);
-				Size = PicFrame->picture().size() ;
-				SrcImage = malloc (Size) ;
-				if (SrcImage){
-					memcpy ( SrcImage, PicFrame->picture().data(), Size ) ;
-					if(!texture.loadFromMemory(SrcImage,Size)){
+
+	// If ID3v2 tag exist...
+	if(id3v2tag){
+		// Get frame list with "APIC" ID and check if frame is not empty
+		TagLib::ID3v2::FrameList frame = id3v2tag->frameListMap()["APIC"];
+		if(!frame.isEmpty()){
+			// Loop for every frame found in list
+			for(TagLib::ID3v2::FrameList::ConstIterator i = frame.begin(); i != frame.end(); i++){
+				// Extract album cover as ByteVector and allocate memory
+				TagLib::ID3v2::AttachedPictureFrame *picFrame = (TagLib::ID3v2::AttachedPictureFrame*)(*i);
+				unsigned long picSize = picFrame->picture().size();
+				void *outImage = malloc(picSize);
+				if (outImage){
+					// Copy to allocated memory whole picture data
+					memcpy(outImage, picFrame->picture().data(), picSize);
+
+					// Load texture
+					if(!texture.loadFromMemory(outImage,picSize)){
 						std::cout << "problem?";
 					} else {
+						// Set albumCoverSprite texture and position it on window
 						float ratio;
-						sprite.setTexture(texture);
-						sprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
+						albumCoverSprite.setTexture(texture);
+						albumCoverSprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
 						texture.setSmooth(true);
 						if(cfg.winWidth>cfg.winHeight){
-							ratio = cfg.winWidth/sprite.getLocalBounds().width;
+							ratio = cfg.winWidth/albumCoverSprite.getLocalBounds().width;
 						} else {
-							ratio = cfg.winHeight/sprite.getLocalBounds().height;
+							ratio = cfg.winHeight/albumCoverSprite.getLocalBounds().height;
 						}
-						sprite.setOrigin(sf::Vector2f(sprite.getLocalBounds().width/2,sprite.getLocalBounds().height/2));
-						sprite.setScale(sf::Vector2f(ratio,ratio));
+						albumCoverSprite.setOrigin(sf::Vector2f(albumCoverSprite.getLocalBounds().width/2,albumCoverSprite.getLocalBounds().height/2));
+						albumCoverSprite.setScale(sf::Vector2f(ratio,ratio));
 					}
 				}
 			}
@@ -90,12 +104,18 @@ void refreshAlbum(){
 	}
 }
 
-//Plays tracks
-void playTrack(){
-	//Free channel data
-	BASS_StreamFree(channel);
+/*
+################################## Play track
+*/
 
-	//Diplay in console "playing now"
+void playTrack(){
+	// Free channel data
+	if(channel != 0 && !BASS_StreamFree(channel)){
+		std::cout << BASS_ErrorGetCode() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// Diplay in console "Playing now"
 	std::cout << "-------------------------\nPlaying now: " << static_cast<boost::filesystem::path>(tracks[trackNow]).filename() << std::endl;
 	if (trackNow + 1 >= tracks.size()){
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[0]).filename() << "\n\n\n\n";
@@ -103,34 +123,47 @@ void playTrack(){
 		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
 	}
 
+	// Find title and author by pattern "Author - Title" in music filename
 	std::string toTitle     = tracks[trackNow];
 	std::size_t lastSlash   = toTitle.find_last_of("/\\");
 	std::size_t lastDot     = toTitle.find_last_of(".");
-	//For programs like OBS - creates text file which consists name of song
+	std::size_t lastHyphen  = toTitle.find_last_of("-");
+	author = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
+	
+	// Set author name to uppercase and save it to "title" var
+	for(int i=0; i<author.size(); i++){ 
+		author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; 
+	}
+	title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
+
+	// Change window name to music name
+	window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + " | FrozeT");
+
+	// For programs like OBS - creates text file which consists name of song
 	if(cfg.saveTitleToFile){
 		std::ofstream file("music.txt");
 		file << tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1);
 		file.close();
 	}
-	std::size_t lastHyphen  = toTitle.find_last_of("-");
-	author = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
-	// Author to uppercase
-	for(int i=0; i<author.size(); i++){ author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; }
-	title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
 
-	window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + " | FrozeT");
-
-	//Set up channel information
-	channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
 	/*
+		Will be used later for streaming from url, just saved this snippet in code
 		channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
-		std::cout << BASS_ErrorGetCode();
 	*/
-	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.1f);
+
+	// Set up channel by loading music from file and setting channel variables
+	channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
+	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.3f);
 	BASS_ChannelPlay(channel, FALSE);
 	isPlaying = true;
+
+	// Load album image
 	refreshAlbum();
 }
+
+/*
+################################## Shuffle tracks
+*/
 
 void shuffle(std::vector<std::string> &before){
 	std::random_device rd;
@@ -141,21 +174,33 @@ void shuffle(std::vector<std::string> &before){
 	}
 }
 
+/*
+################################## Play next song
+*/
+
 void playNext(std::vector<std::string> args = {}){
 	trackNow++;
-	if (trackNow >= tracks.size()){
+	if(trackNow >= tracks.size()){
 		trackNow = 0;
 	}
 	playTrack();
 }
 
+/*
+################################## Play previous song
+*/
+
 void playPrevious(std::vector<std::string> args = {}){
 	trackNow--;
-	if (trackNow < 0){
+	if(trackNow < 0){
 		trackNow = tracks.size()-1;
 	}
 	playTrack();
 }
+
+/*
+################################## Pause/Resume song
+*/
 
 void pauseSong(std::vector<std::string> args = {}){
 	if(isPlaying){
@@ -167,22 +212,55 @@ void pauseSong(std::vector<std::string> args = {}){
 	}
 }
 
+/*
+################################## Reposition objects on window resize
+*/
+
 void windowResizing(unsigned int winW, unsigned int winH){
+	// Set new window's height and width to variable
 	cfg.winWidth = winW;
 	cfg.winHeight = winH;
+
+	// Reposition/Resize elements
 	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
 	progressBarBack.setPosition(10, cfg.winHeight - 16);
 	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
 	progressBarFront.setPosition(10, cfg.winHeight - 16);
+
+	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
+	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
+	titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
+	titleTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+72);
+	albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
+
 	for (int i = 0; i<barAmount; i++){
 		barRect[i].setSize(sf::Vector2f(1, 10));
 		barRect[i].setFillColor(sf::Color::White);
 		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
+		barRectShadow[i].setSize(sf::Vector2f(1, 10));
+		barRectShadow[i].setFillColor(sf::Color::Black);
+		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+2, cfg.winHeight*0.65-20+2);
 	}
 	barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 }
 
-std::vector<std::string> takeMusic(boost::filesystem::path p = "F:\\Music\\"){
+/*
+################################## Save some GPU power by decreasing FPS while unfocused
+*/
+
+void saveMode(bool state){
+	if(state && cfg.saveEnergy){
+		window.setFramerateLimit(15);
+	} else {
+		window.setFramerateLimit(cfg.winFPS);
+	}
+}
+
+/*
+################################## Search folder for music and return list of music paths
+*/
+
+std::vector<std::string> takeMusic(boost::filesystem::path p){
 	std::vector<std::string> files;
 	for(auto x : boost::filesystem::directory_iterator(p)){
 		if (boost::filesystem::path(x).extension() == ".mp3"){
@@ -193,7 +271,11 @@ std::vector<std::string> takeMusic(boost::filesystem::path p = "F:\\Music\\"){
 	return files;
 }
 
-//Button List stored in std::vector
+
+/*
+################################## Button List stored in std::vector
+*/
+
 std::vector<Button> buttonList = {
 	Button("Next song",10,30,5,5,playNext,{},cfg.lighter_grey),
 	Button("Previous song",10,90,5,5,playPrevious,{},cfg.lighter_grey),
@@ -210,113 +292,153 @@ std::vector<Button> buttonList = {
    #######################################################   */
 
 int main(){
-	tracks = takeMusic();
-	shuffle(tracks);
 	float fft[2048];                                        //FFT array (1/2 of freq of samples)
 	float bars[barAmount];                                  //Array holding bars values
 	float smoothingBars[barAmount][smoothBy] = { 0 };       //Array holding variables used for smoothing bars
 	double time, duration;                                  //Time and duration of track
-	sf::FloatRect bounds;                                   //Bounds of time of progress bar
 	const sf::Color winBackground = cfg.grey;                  //Color of the window's background
+	float aveBars[barAmount];
 
-	sf::RectangleShape albumCover;                                  //Album cover image near title and author
-	sf::Text titleText;
-	sf::Text authorText;
+	//######################################################### INITALIZE EVERYTHING
 
+	// Folder containing music
+	boost::filesystem::path musicFolder = "F:\\Music\\";
 
-	//Initialize BASS and play track
-	BASS_Init(cfg.deviceID, cfg.freq, 0, 0, NULL);
+	// Search for music in folder and shuffle it
+	tracks = takeMusic(musicFolder);
+	shuffle(tracks);
+
+	// Initialize BASS and play track
+	if(!BASS_Init(cfg.deviceID, cfg.freq, 0, NULL, NULL)){
+		std::cout << BASS_ErrorGetCode() << std::endl;
+		exit(EXIT_FAILURE);
+	};
 	playTrack();
 
-	//Initialize window frame
-	window.setVerticalSyncEnabled(true);
+	// Initialize window frame settings
+	window.setVerticalSyncEnabled(false);
+	window.setFramerateLimit(cfg.winFPS);
 	window.setKeyRepeatEnabled(false);
 
-	//Change text style and font
+	// ######################################################### CHANGE STYLES
+
+	// Change "duration and current time" text style
 	progressBarTime.setFont(cfg.fBold);
 	progressBarTime.setCharacterSize(18);
 	progressBarTime.setFillColor(sf::Color::White);
 
-	//Set progress bar
+	// Change "progress bar background" style
 	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
 	progressBarBack.setPosition(10, cfg.winHeight - 16);
 	progressBarBack.setFillColor(sf::Color(40, 40, 40, 255));
+
+	// Change "progress bar front" style
 	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
 	progressBarFront.setPosition(10, cfg.winHeight - 16);
 	progressBarFront.setFillColor(sf::Color::White);
 
-	for (int i = 0; i<barAmount; i++){
+	// Change "album cover image" style
+	albumCover.setTexture(&texture);
+	albumCover.setSize(sf::Vector2f(128,128));
+	albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
+
+	// Change "artist text" and it's shadow style
+	authorText.setFont(cfg.fBold);
+	authorText.setCharacterSize(50);
+	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
+	authorTextShadow.setFont(cfg.fBold);
+	authorTextShadow.setFillColor(sf::Color::Black);
+	authorTextShadow.setCharacterSize(50);
+	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
+
+	// Change "title text" and it's shadow style
+	titleText.setFont(cfg.fRegular);
+	titleText.setCharacterSize(30);
+	titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
+	titleTextShadow.setFont(cfg.fRegular);
+	titleTextShadow.setFillColor(sf::Color::Black);
+	titleTextShadow.setCharacterSize(30);
+	titleTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+72);
+
+	// Change "visualizer bars" style
+	for(int i=0; i<barAmount; i++){
 		barRect[i].setSize(sf::Vector2f(1, 10));
 		barRect[i].setFillColor(sf::Color::White);
 		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
+		barRectShadow[i].setSize(sf::Vector2f(1, 10));
+		barRectShadow[i].setFillColor(sf::Color::Black);
+		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+1, cfg.winHeight*0.65-20+1);
 	}
 
+	//######################################################### WINDOW LOOP
+
 	while (window.isOpen()){
-		//Set time and duration of track
+		// Get time and duration of track and set size of prograss bar
 		time = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetPosition(channel, BASS_POS_BYTE));
 		duration = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetLength(channel, BASS_POS_BYTE));
 		progressBarFront.setSize(sf::Vector2f((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
-		if(BASS_ChannelIsActive(channel) == BASS_ACTIVE_PLAYING){
-			// Music is playing STATE
-		} else if(BASS_ChannelIsActive(channel) == BASS_ACTIVE_PAUSED){
-			// Music is paused STATE
-		} else {
-			playNext();
+		
+		// Check state of channel
+		switch(BASS_ChannelIsActive(channel)){
+			case BASS_ACTIVE_PLAYING: // PLAYING STATE
+				break;
+			case BASS_ACTIVE_PAUSED:  // PAUSED STATE
+				break;
+			default:
+				playNext();
+				break;
 		}
 
-		//Save GPU power while unfocused
-		//if(!window.hasFocus() && cfg.saveEnergy == true){
-		//	window.setFramerateLimit(15);
-		//} else {
-		//	window.setFramerateLimit(cfg.winFPS);
-		//}
-
-		//Change progress bar time
+		// Change progress bar text and position
 		progressBarTime.setString(toHumanTime(time) + "/" + toHumanTime(duration));
-		bounds = progressBarTime.getLocalBounds();
-		progressBarTime.setPosition(cfg.winWidth - 10 - bounds.width, cfg.winHeight - 42);
+		progressBarTime.setPosition(cfg.winWidth-10-progressBarTime.getLocalBounds().width, cfg.winHeight-42);
 
-		//Set bars values
+		//######################################################### VISUALIZER
+
+		// Take channel data, change it into visualizer bar data and smooth each bar
 		BASS_ChannelGetData(channel, fft, cfg.fftfreq);
-		for (int a = 0; a<barAmount; a++){
+		for(int i=0; i<barAmount; i++){
 			float sum = 0;
-			for (int j = 0; j<smoothBy - 1; j++){
-				smoothingBars[a][j] = smoothingBars[a][j + 1];
-				sum += smoothingBars[a][j];
+			for(int j = 0; j<smoothBy-1; j++){
+				smoothingBars[i][j] = smoothingBars[i][j+1];
+				sum += smoothingBars[i][j];
 			}
-			smoothingBars[a][smoothBy - 1] = fft[a];
-			sum += smoothingBars[a][smoothBy - 1];
-			bars[a] = sqrt(sum / smoothBy)*-1*(cfg.winHeight*0.6) - 1;
+			smoothingBars[i][smoothBy-1] = fft[i];
+			sum += smoothingBars[i][smoothBy-1];
+			// Set value of each bar by formula: -1 (to flip upside down bar) * square root of -> divide sum of smoothing values by smoothing var * 60% - 1px of window's height
+			bars[i] = -1.0f*sqrt(sum/smoothBy)*(cfg.winHeight*0.6f)-1.0f;
 		}
 
-		//Take average of bars values
-		float aveBars[barAmount];
-		for (int i = 0; i<barAmount; i++){
+		// Smooth all bars by taking average of neighbours and set their size
+		for(int i=0; i<barAmount; i++){
 			aveBars[i] = (bars[std::max(0, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
+			barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i],cfg.winHeight*-0.35)));
+			barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i],cfg.winHeight*-0.35)));
 		}
 
-		//Handle events
+		//######################################################### WINDOW EVENTS
+
 		sf::Event event;
-		while (window.pollEvent(event)){
+		while(window.pollEvent(event)){
 			switch (event.type){
-				//If window is coming to close
+				// On window close
 				case sf::Event::Closed:
 					window.close();
 					return 1;
 					break;
-				//If window is resized
+				// On window resize
 				case sf::Event::Resized:
 					window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
 					windowResizing(event.size.width, event.size.height);
 					refreshAlbum();
 					break;
-				//If key is pressed
+				// On key press
 				case sf::Event::KeyPressed:
 					if(event.key.code == sf::Keyboard::P){
 						playNext();
 					}
 					break;
-				//If button is pressed
+				// On mouse press
 				case sf::Event::MouseButtonPressed:
 					if(event.mouseButton.button == 0){
 						for(int i=0; i<buttonList.size(); i++){
@@ -324,39 +446,45 @@ int main(){
 						}
 					}
 					break;
+				// On lost window focus
+				case sf::Event::LostFocus:
+					saveMode(true);
+					break;
+				// On gain window focus
+				case sf::Event::GainedFocus:
+					saveMode(false);
+					break;
 				default:
 					break;
 			}
 		}
 
-		albumCover.setTexture(&texture);
-		albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
-		albumCover.setSize(sf::Vector2f(128,128));
+		// Set artist and song title text
 		authorText.setString(author);
-		authorText.setFont(cfg.fBold);
-		authorText.setCharacterSize(50);
-		authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
+		authorTextShadow.setString(author);
 		titleText.setString(title);
-		titleText.setFont(cfg.fRegular);
-		titleText.setCharacterSize(30);
-		titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
+		titleTextShadow.setString(title);
 
-		//Draw everything on window
+		// Draw everything on the window
 		window.clear(winBackground);
-		window.draw(sprite,&cfg.shader_brightness);
-		for (int i = 0; i<barAmount; i++){
-			barRect[i].setSize(sf::Vector2f(barWidth, smallk(aveBars[i],cfg.winHeight*-0.35) ));
+
+		window.draw(albumCoverSprite,&cfg.shader_brightness);
+		for(int i=0; i<barAmount; i++){
+			window.draw(barRectShadow[i]);
 			window.draw(barRect[i]);
 		}
+		window.draw(albumCover);
+		window.draw(authorTextShadow);
+		window.draw(authorText);
+		window.draw(titleTextShadow);
+		window.draw(titleText);
 		window.draw(progressBarBack);
 		window.draw(progressBarFront);
 		window.draw(progressBarTime);
 		for(int i=0; i<buttonList.size(); i++){
 			buttonList[i].draw(window);
 		}
-		window.draw(albumCover);
-		window.draw(authorText);
-		window.draw(titleText);
+
 		window.display();
 	}
 

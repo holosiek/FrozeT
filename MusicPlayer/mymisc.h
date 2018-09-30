@@ -32,6 +32,7 @@ class Button{
 };
 
 void printDevices();
+double biggerFloatOrDouble(float x, double y);
 std::string dblToString(double);
 std::string floatToString(float);
 std::string intToString(int);

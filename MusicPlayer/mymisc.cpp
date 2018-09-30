@@ -128,3 +128,8 @@ std::string toHumanTime(double ti){
 	str += toDoubleChars(intToString(timeInt));
 	return str;
 }
+
+// Return bigger number
+double biggerFloatOrDouble(float x, double y){
+	return (x > y) ? x : y;
+}
