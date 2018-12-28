@@ -9,6 +9,22 @@ class Config {
 		const std::string s_fNormal   = "PT-Sans-Normal.ttf";       //Normal PT Sans
 	public:
 		/* #########################################
+			 ___      _              
+			|   \ ___| |__ _  _ __ _ 
+			| |) / -_) '_ \ || / _` |
+			|___/\___|_.__/\_,_\__, |
+							   |___/ 
+
+		*/
+		// If set true:
+		// - Logs to console:
+		// > which folder is selected in file browser dialog
+		// > print how many songs is in folder when opened
+		const bool debugMode            = true;
+		// Prefix of all messages of debug mode
+		std::wstring const debugPrefix  = L"[DEBUG] ";
+
+		/* #########################################
 			 ___      _   _   _              
 			/ __| ___| |_| |_(_)_ _  __ _ ___
 			\__ \/ -_)  _|  _| | ' \/ _` (_-<
@@ -30,7 +46,7 @@ class Config {
                                 
 		*/
 		// DeviceID of device that will play music, -1 = default
-		const short deviceID          = 4;
+		short deviceID                = 5;
 		// Sampling frequency of channel
 		const unsigned short freq     = 44100;
 		// Freq of samples
@@ -62,8 +78,10 @@ class Config {
 		*/
 		// Fonts
 		sf::Font fBold, fRegular, fNormal;
+		// Textures
+		sf::Texture emptyPixel;
 		// Shaders
-		sf::Shader shader_brightness;
+		sf::Shader shader_brightness, shader_glass;
 		// Red/Green/Blue colors
 		const sf::Color red           = sf::Color(255,0,0,255);
 		const sf::Color green         = sf::Color(0,255,0,255);

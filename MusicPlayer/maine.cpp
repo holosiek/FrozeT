@@ -11,6 +11,8 @@
 #include <vector>
 #include <random>
 #include <fstream>
+#include <shlobj.h>
+#include <windows.h>
 //TagLib
 #include <tag.h>
 #include <fileref.h>
@@ -26,9 +28,7 @@
 #include "mymisc.h"
 #include "config.h"
 
-
 const unsigned short     smoothBy = 9;                        //Amount of smoothing variables
-
 
 unsigned short            barSize = 10;                        //Size of bars
 const unsigned short    barAmount = 62;                        //Amount of bars
@@ -54,47 +54,89 @@ sf::RectangleShape albumCover;                                 // Album cover im
 sf::Text titleText; sf::Text titleTextShadow;                  // Title text and it's shadow
 sf::Text authorText; sf::Text authorTextShadow;                // Author text and it's shadow
 
+/*
+################################## File System Dialog functions
+*/
+
+// Handles our file system dialog
+static int CALLBACK dialogHandler(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData){
+	// [DEBUG] Check whenever selection in dialog changed
+	if(uMsg == BFFM_SELCHANGED && cfg.debugMode == true){
+		TCHAR path[MAX_PATH];
+		SHGetPathFromIDList((LPITEMIDLIST) lParam, path);
+		std::cout << cfg.debugPrefix << path << std::endl;
+	}
+    return 0;
+}
+
+// Show file system dialog
+std::string browseFilesDialog(std::string const dialogTitle = ""){
+    TCHAR path[MAX_PATH];
+    BROWSEINFO dialogOptions            = { 0 };
+			   dialogOptions.lpszTitle  = dialogTitle.c_str();
+			   dialogOptions.ulFlags    = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+		       dialogOptions.lpfn       = dialogHandler;
+		       dialogOptions.lParam     = NULL;
+    LPITEMIDLIST pidl = SHBrowseForFolder(&dialogOptions);
+
+	// If file system dialog is not canceled
+    if(pidl != 0){
+        // Convert our SHBrowseForFolder result to normal path name and save it to "path"
+        SHGetPathFromIDList(pidl, path);
+
+        // Free memory from "pidl"
+        IMalloc *imalloc = nullptr;
+        if (SUCCEEDED(SHGetMalloc(&imalloc))){
+            imalloc->Free(pidl);
+            imalloc->Release();
+        }
+        return path;
+    }
+    return "";
+}
 
 /*
 ################################## Load album image from file using TagLib
 */
 
 void refreshAlbum(){
-	// Load MP3 file which will be used to extract album cover and check for ID3v2 tag
-	TagLib::MPEG::File f(tracks[trackNow].c_str());
-	TagLib::ID3v2::Tag *id3v2tag = f.ID3v2Tag();
+	if(tracks.size() != 0){
+		// Load MP3 file which will be used to extract album cover and check for ID3v2 tag
+		TagLib::MPEG::File f(tracks[trackNow].c_str());
+		TagLib::ID3v2::Tag *id3v2tag = f.ID3v2Tag();
 
-	// If ID3v2 tag exist...
-	if(id3v2tag){
-		// Get frame list with "APIC" ID and check if frame is not empty
-		TagLib::ID3v2::FrameList frame = id3v2tag->frameListMap()["APIC"];
-		if(!frame.isEmpty()){
-			// Loop for every frame found in list
-			for(TagLib::ID3v2::FrameList::ConstIterator i = frame.begin(); i != frame.end(); i++){
-				// Extract album cover as ByteVector and allocate memory
-				TagLib::ID3v2::AttachedPictureFrame *picFrame = (TagLib::ID3v2::AttachedPictureFrame*)(*i);
-				unsigned long picSize = picFrame->picture().size();
-				void *outImage = malloc(picSize);
-				if (outImage){
-					// Copy to allocated memory whole picture data
-					memcpy(outImage, picFrame->picture().data(), picSize);
+		// If ID3v2 tag exist...
+		if(id3v2tag){
+			// Get frame list with "APIC" ID and check if frame is not empty
+			TagLib::ID3v2::FrameList frame = id3v2tag->frameListMap()["APIC"];
+			if(!frame.isEmpty()){
+				// Loop for every frame found in list
+				for(TagLib::ID3v2::FrameList::ConstIterator i = frame.begin(); i != frame.end(); i++){
+					// Extract album cover as ByteVector and allocate memory
+					TagLib::ID3v2::AttachedPictureFrame *picFrame = (TagLib::ID3v2::AttachedPictureFrame*)(*i);
+					unsigned long picSize = picFrame->picture().size();
+					void *outImage = malloc(picSize);
+					if (outImage){
+						// Copy to allocated memory whole picture data
+						memcpy(outImage, picFrame->picture().data(), picSize);
 
-					// Load texture
-					if(!texture.loadFromMemory(outImage,picSize)){
-						std::cout << "problem?";
-					} else {
-						// Set albumCoverSprite texture and position it on window
-						float ratio;
-						albumCoverSprite.setTexture(texture);
-						albumCoverSprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
-						texture.setSmooth(true);
-						if(cfg.winWidth>cfg.winHeight){
-							ratio = cfg.winWidth/albumCoverSprite.getLocalBounds().width;
+						// Load texture
+						if(!texture.loadFromMemory(outImage,picSize)){
+							std::cout << "problem?";
 						} else {
-							ratio = cfg.winHeight/albumCoverSprite.getLocalBounds().height;
+							// Set albumCoverSprite texture and position it on window
+							float ratio;
+							albumCoverSprite.setTexture(texture);
+							albumCoverSprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
+							texture.setSmooth(true);
+							if(cfg.winWidth>cfg.winHeight){
+								ratio = cfg.winWidth/albumCoverSprite.getLocalBounds().width;
+							} else {
+								ratio = cfg.winHeight/albumCoverSprite.getLocalBounds().height;
+							}
+							albumCoverSprite.setOrigin(sf::Vector2f(albumCoverSprite.getLocalBounds().width/2,albumCoverSprite.getLocalBounds().height/2));
+							albumCoverSprite.setScale(sf::Vector2f(ratio,ratio));
 						}
-						albumCoverSprite.setOrigin(sf::Vector2f(albumCoverSprite.getLocalBounds().width/2,albumCoverSprite.getLocalBounds().height/2));
-						albumCoverSprite.setScale(sf::Vector2f(ratio,ratio));
 					}
 				}
 			}
@@ -107,56 +149,58 @@ void refreshAlbum(){
 */
 
 void playTrack(){
-	// Free channel data
-	if(channel != 0 && !BASS_StreamFree(channel)){
-		std::cout << BASS_ErrorGetCode() << std::endl;
-		exit(EXIT_FAILURE);
-	}
+	if(tracks.size() != 0){
+		// Free channel data
+		if(channel != 0 && !BASS_StreamFree(channel)){
+			std::cout << BASS_ErrorGetCode() << std::endl;
+			exit(EXIT_FAILURE);
+		}
 
-	// Diplay in console "Playing now"
-	std::cout << "-------------------------\nPlaying now: " << static_cast<boost::filesystem::path>(tracks[trackNow]).filename() << std::endl;
-	if (trackNow + 1 >= tracks.size()){
-		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[0]).filename() << "\n\n\n\n";
-	} else {
-		std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
-	}
+		// Diplay in console "Playing now"
+		std::cout << "-------------------------\nPlaying now: " << static_cast<boost::filesystem::path>(tracks[trackNow]).filename() << std::endl;
+		if (trackNow + 1 >= tracks.size()){
+			std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[0]).filename() << "\n\n\n\n";
+		} else {
+			std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
+		}
 
-	// Find title and author by pattern "Author - Title" in music filename
-	std::string toTitle     = tracks[trackNow];
-	std::size_t lastSlash   = toTitle.find_last_of("/\\");
-	std::size_t lastDot     = toTitle.find_last_of(".");
-	std::size_t lastHyphen  = toTitle.find_last_of("-");
-	author = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
+		// Find title and author by pattern "Author - Title" in music filename
+		std::string toTitle     = tracks[trackNow];
+		std::size_t lastSlash   = toTitle.find_last_of("/\\");
+		std::size_t lastDot     = toTitle.find_last_of(".");
+		std::size_t lastHyphen  = toTitle.find_last_of("-");
+		author = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
 	
-	// Set author name to uppercase and save it to "title" var
-	for(int i=0; i<author.size(); i++){ 
-		author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; 
+		// Set author name to uppercase and save it to "title" var
+		for(int i=0; i<author.size(); i++){ 
+			author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; 
+		}
+		title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
+
+		// Change window name to music name
+		window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + " | FrozeT");
+
+		// For programs like OBS - creates text file which consists name of song
+		if(cfg.saveTitleToFile){
+			std::ofstream file("music.txt");
+			file << tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1);
+			file.close();
+		}
+
+		/*
+			Will be used later for streaming from url, just saved this snippet in code
+			channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
+		*/
+
+		// Set up channel by loading music from file and setting channel variables
+		channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
+		BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.3f);
+		BASS_ChannelPlay(channel, FALSE);
+		isPlaying = true;
+
+		// Load album image
+		refreshAlbum();
 	}
-	title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
-
-	// Change window name to music name
-	window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + " | FrozeT");
-
-	// For programs like OBS - creates text file which consists name of song
-	if(cfg.saveTitleToFile){
-		std::ofstream file("music.txt");
-		file << tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1);
-		file.close();
-	}
-
-	/*
-		Will be used later for streaming from url, just saved this snippet in code
-		channel = BASS_StreamCreateURL(TRACKURL, 0, 0, NULL, 0); //Stream music from URL
-	*/
-
-	// Set up channel by loading music from file and setting channel variables
-	channel = BASS_StreamCreateFile(FALSE, tracks[trackNow].c_str(), 0, 0, 0);
-	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0.3f);
-	BASS_ChannelPlay(channel, FALSE);
-	isPlaying = true;
-
-	// Load album image
-	refreshAlbum();
 }
 
 /*
@@ -166,7 +210,7 @@ void playTrack(){
 void shuffle(std::vector<std::string> &before){
 	std::random_device rd;
 	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> uni(0, before.size());
+	std::uniform_int_distribution<int> uni(0, before.size()-1);
 	for (int i = 0; i < before.size(); i++){
 		std::swap(before[i], before[uni(rng)]);
 	}
@@ -214,7 +258,7 @@ void pauseSong(std::vector<std::string> args = {}){
 ################################## Reposition objects on window resize
 */
 
-void windowResizing(unsigned int winW, unsigned int winH){
+void windowResizing(unsigned int winW = cfg.winWidth, unsigned int winH = cfg.winHeight){
 	// Set new window's height and width to variable
 	cfg.winWidth = winW;
 	cfg.winHeight = winH;
@@ -269,6 +313,44 @@ std::vector<std::string> takeMusic(boost::filesystem::path p){
 	return files;
 }
 
+/*
+################################## Open folder, prepare music, shuffle
+*/
+
+void openTakeShuffleMusic(std::vector<std::string> args = {""}){
+	if(args[0] == ""){
+		// Stop, free and clear all variables used for playing
+		isPlaying = false;
+		BASS_ChannelStop(channel);
+		tracks.clear();
+		trackNow = 0;
+		// Take music from working directory, then shuffle and play it
+		tracks = takeMusic(boost::filesystem::current_path());
+		shuffle(tracks);
+		playTrack();
+		// [DEBUG] Print how many songs are in this folder
+		if(cfg.debugMode == true){
+			std::cout << cfg.debugPrefix << tracks.size() << std::endl;
+		}
+	} else {
+		std::string path = browseFilesDialog(args[0]);
+		if(path != ""){
+			// Stop, free and clear all variables used for playing
+			isPlaying = false;
+			BASS_ChannelStop(channel);
+			tracks.clear();
+			trackNow = 0;
+			// Take music from path we chose, then shuffle and play it
+			tracks = takeMusic((boost::filesystem::path) path);
+			shuffle(tracks);
+			playTrack();
+			// [DEBUG] Print how many songs are in this folder
+			if(cfg.debugMode == true){
+				std::cout << cfg.debugPrefix << tracks.size() << std::endl;
+			}
+		}
+	}
+}
 
 /*
 ################################## Button List stored in std::vector
@@ -277,7 +359,8 @@ std::vector<std::string> takeMusic(boost::filesystem::path p){
 std::vector<Button> buttonList = {
 	Button("Next song",10,30,5,5,playNext,{},cfg.lighter_grey),
 	Button("Previous song",10,90,5,5,playPrevious,{},cfg.lighter_grey),
-	Button("Pause song",10,60,5,5,pauseSong,{},cfg.lighter_grey)
+	Button("Pause song",10,60,5,5,pauseSong,{},cfg.lighter_grey),
+	Button("Open Folder",10,120,5,5,openTakeShuffleMusic,{"Open folder which holds music"},cfg.lighter_grey)
 };
 
 
@@ -300,18 +383,18 @@ int main(){
 	//######################################################### INITALIZE EVERYTHING
 
 	// Folder containing music
-	boost::filesystem::path musicFolder = "F:\\Music\\";
-
-	// Search for music in folder and shuffle it
-	tracks = takeMusic(musicFolder);
-	shuffle(tracks);
+	boost::filesystem::path musicFolder = "";
+	std::ifstream configFile("config.txt");
+	configFile >> musicFolder;
+	configFile >> cfg.deviceID;
+	configFile.close();
 
 	// Initialize BASS and play track
 	if(!BASS_Init(cfg.deviceID, cfg.freq, 0, NULL, NULL)){
 		std::cout << BASS_ErrorGetCode() << std::endl;
 		exit(EXIT_FAILURE);
 	};
-	playTrack();
+	openTakeShuffleMusic({""});
 
 	// Initialize window frame settings
 	window.setVerticalSyncEnabled(false);
@@ -367,6 +450,9 @@ int main(){
 		barRectShadow[i].setFillColor(sf::Color::Black);
 		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+1, cfg.winHeight*0.65-20+1);
 	}
+
+	cfg.shader_brightness.setUniform("blur_radius", sf::Vector2f(0.003f, 0.003f));
+	cfg.shader_glass.setUniform("blur_radius", sf::Vector2f(0.001f, 0.001f));
 
 	//######################################################### WINDOW LOOP
 
@@ -482,7 +568,6 @@ int main(){
 		for(int i=0; i<buttonList.size(); i++){
 			buttonList[i].draw(window);
 		}
-
 		window.display();
 	}
 

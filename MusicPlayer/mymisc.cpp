@@ -35,7 +35,7 @@ void Button::updateButton(){
 
 //Draw Button on the screen
 void Button::draw(sf::RenderWindow &win){
-	win.draw(border);
+	win.draw(border,&cfg.shader_glass);
 	textDisplayer.setString(text);
 	win.draw(textDisplayer);
 }
@@ -64,6 +64,7 @@ Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short 
 	textDisplayer.setCharacterSize(16);
 	textDisplayer.setFillColor(sf::Color::Black);
 	textDisplayer.setString(text);
+	border.setTexture(&cfg.emptyPixel);
 
 	width = textDisplayer.getGlobalBounds().width + wid*2;
 	height = textDisplayer.getGlobalBounds().height + hei*2;

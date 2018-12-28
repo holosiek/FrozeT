@@ -20,6 +20,14 @@ void Config::startup(){
 	if(!shader_brightness.loadFromFile("shad.vert", "shad.frag")){
 		// Error callback
 	}
+	if(!shader_glass.loadFromFile("shad_glass.frag", sf::Shader::Fragment)){
+		// Error callback
+	}
+	if(!emptyPixel.loadFromFile("images/emptypixel.png")){
+		// Error callback
+	} else {
+		emptyPixel.setRepeated(true);
+	}
 }
 
 // Default constructor

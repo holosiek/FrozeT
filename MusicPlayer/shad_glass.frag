@@ -1,8 +1,8 @@
 uniform sampler2D texture;
 uniform vec2 blur_radius;
 
-void main() {
-    vec2 textureCoordinates = gl_TexCoord[0].xy;
+void main() { 
+	vec2 textureCoordinates = gl_TexCoord[0].xy;
     vec4 color = vec4(0.0);
 	color += texture2D(texture, textureCoordinates - 10.0 * blur_radius) * 0.0012;
     color += texture2D(texture, textureCoordinates - 9.0 * blur_radius) * 0.0015;
@@ -25,14 +25,5 @@ void main() {
     color += texture2D(texture, textureCoordinates - 8.0 * blur_radius) * 0.0038;
     color += texture2D(texture, textureCoordinates - 9.0 * blur_radius) * 0.0015;
     color += texture2D(texture, textureCoordinates - 10.0 * blur_radius) * 0.0012;
-    gl_FragColor = vec4(color.rgb*0.4,1.0);
+    gl_FragColor = vec4(color.rgb,0.7);
 }
-/*
-	uniform sampler2D texture;
-	float darkness = 0.5;
-
-	void main(){
-		vec4 Color = texture2D(texture, gl_TexCoord[0].xy)* vec4(1,0,0,1);  
-		gl_FragColor = vec4(Color.r*darkness, Color.g*darkness, Color.b*darkness, Color.a);
-	}
-*/
