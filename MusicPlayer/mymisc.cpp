@@ -12,7 +12,7 @@
 */
 
 //Set button text
-void Button::setText(std::string str){
+void Button::setText(std::wstring str){
 	text = str;
 	textDisplayer.setString(text);
 }
@@ -50,7 +50,7 @@ int Button::checkIfClicked(sf::Vector2i mousePos){
 }
 
 //Button constructors
-Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments, sf::Color back){
+Button::Button(std::wstring name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::wstring>), std::vector<std::wstring> arguments, sf::Color back){
 	posX = x;
 	posY = y;
 	background = back;
@@ -72,7 +72,7 @@ Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short 
 
 	updateButton();
 }
-Button::Button(std::string name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::string>), std::vector<std::string> arguments){
+Button::Button(std::wstring name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::wstring>), std::vector<std::wstring> arguments){
 	Button(name,x,y,wid,hei,funk,arguments,sf::Color(0,0,0,0));
 }
 
