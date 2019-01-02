@@ -2,10 +2,13 @@
 
 FrozeT is an open source music player written in C++ with SFML, TagLib, Boost and Bass libraries. 
 
+![Visualizer](https://thumbs.gfycat.com/WiltedBoilingFieldspaniel-size_restricted.gif)
+
 ## Features
 
 - Plays music on different audio channels
 - Audio spectrum
+- Saves title & artist to file, which can be used e.g. in OBS
 
 More to come...
 
@@ -13,7 +16,7 @@ More to come...
 
 - Buttons, UI...
 - Settings/Config
-- File explorer
-- Album cover as background
+- Playlists
+- Animations
 
 ###### 📝 Update/New   ♻️ Rework   🛠 Fixes   🔧 Tweaks
