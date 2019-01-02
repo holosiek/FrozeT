@@ -27,32 +27,15 @@
 //Project Related
 #include "mymisc.h"
 #include "config.h"
+#include "spectrumComponent.h"
 
-const unsigned short     smoothBy = 9;                        //Amount of smoothing variables
-
-unsigned short            barSize = 10;                        //Size of bars
-const unsigned short    barAmount = 62;                        //Amount of bars
-
-HSTREAM                   channel = 0;                         //Initialize channel variable
-std::vector<std::wstring>  tracks;                             //Initialize tracks vector, which will hold track paths
-int                      trackNow = 0;                         //Index of track used in tracks vector
-bool                    isPlaying = true;                      //Is stream playing?
+SpectrumComp spectrumComp;
+HSTREAM                   channel = 0;                         // Initialize channel variable
+std::vector<std::wstring>  tracks;                             // Initialize tracks vector, which will hold track paths
+int                      trackNow = 0;                         // Index of track used in tracks vector
+bool                    isPlaying = true;                      // Is stream playing?
 
 sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle);
-
-int barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
-
-
-std::wstring title, author;                                    // Variables holding title and author of music
-sf::RectangleShape progressBarBack, progressBarFront;          // Rectangles of progress bar
-sf::Text progressBarTime;                                      // Time display on progress bar
-sf::RectangleShape barRect[barAmount];                         // Visualizer bars
-sf::RectangleShape barRectShadow[barAmount];                   // Visualizer bars shadow
-sf::Sprite albumCoverSprite;                                   // Sprite of album cover image
-sf::Texture texture;                                           // Texture of album cover image
-sf::RectangleShape albumCover;                                 // Album cover image near title and author
-sf::Text titleText; sf::Text titleTextShadow;                  // Title text and it's shadow
-sf::Text authorText; sf::Text authorTextShadow;                // Author text and it's shadow
 
 /*
 ################################## File System Dialog functions
@@ -107,7 +90,6 @@ std::string browseFilesDialog(std::wstring const dialogTitle = L""){
 /*
 ################################## Load album image from file using TagLib
 */
-
 void refreshAlbum(){
 	if(tracks.size() != 0){
 		// Load MP3 file which will be used to extract album cover and check for ID3v2 tag
@@ -130,21 +112,23 @@ void refreshAlbum(){
 						memcpy(outImage, picFrame->picture().data(), picSize);
 
 						// Load texture
-						if(!texture.loadFromMemory(outImage,picSize)){
+						if(!spectrumComp.texture.loadFromMemory(outImage,picSize)){
 							std::cout << "problem?";
 						} else {
 							// Set albumCoverSprite texture and position it on window
 							float ratio;
-							albumCoverSprite.setTexture(texture);
-							albumCoverSprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
-							texture.setSmooth(true);
+							spectrumComp.albumCoverSprite.setTexture(spectrumComp.texture);
+							spectrumComp.albumCoverSprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
+							spectrumComp.texture.setSmooth(true);
 							if(cfg.winWidth>cfg.winHeight){
-								ratio = cfg.winWidth/albumCoverSprite.getLocalBounds().width;
+								ratio = cfg.winWidth/spectrumComp.albumCoverSprite.getLocalBounds().width;
 							} else {
-								ratio = cfg.winHeight/albumCoverSprite.getLocalBounds().height;
+								ratio = cfg.winHeight/spectrumComp.albumCoverSprite.getLocalBounds().height;
 							}
-							albumCoverSprite.setOrigin(sf::Vector2f(albumCoverSprite.getLocalBounds().width/2,albumCoverSprite.getLocalBounds().height/2));
-							albumCoverSprite.setScale(sf::Vector2f(ratio,ratio));
+							spectrumComp.albumCoverSprite.setOrigin(sf::Vector2f(spectrumComp.albumCoverSprite.getLocalBounds().width/2,spectrumComp.albumCoverSprite.getLocalBounds().height/2));
+							spectrumComp.albumCoverSprite.setScale(sf::Vector2f(ratio,ratio));
+							spectrumComp.albumCover.setTexture(&spectrumComp.texture);
+							spectrumComp.albumCover.setTextureRect(sf::IntRect(0,0,spectrumComp.albumCover.getTexture()->getSize().x,spectrumComp.albumCover.getTexture()->getSize().y));
 						}
 					}
 				}
@@ -174,18 +158,14 @@ void playTrack(){
 		}
 
 		// Find title and author by pattern "Author - Title" in music filename
-		//std::string toTitle( tracks[trackNow].begin(), tracks[trackNow].end() );
 		std::wstring toTitle    = tracks[trackNow];
 		std::size_t lastSlash   = toTitle.find_last_of(L"/\\");
 		std::size_t lastDot     = toTitle.find_last_of(L".");
 		std::size_t lastHyphen  = toTitle.find_last_of(L"-");
-		author = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
+		spectrumComp.setAuthor(tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1));
 	
 		// Set author name to uppercase and save it to "title" var
-		for(int i=0; i<author.size(); i++){ 
-			author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; 
-		}
-		title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
+		spectrumComp.setTitle(tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2));
 
 		// Change window name to music name
 		window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + L" | FrozeT");
@@ -262,38 +242,6 @@ void pauseSong(std::vector<std::wstring> args = {}){
 		BASS_ChannelPlay(channel, FALSE);
 		isPlaying = !isPlaying;
 	}
-}
-
-/*
-################################## Reposition objects on window resize
-*/
-
-void windowResizing(unsigned int winW = cfg.winWidth, unsigned int winH = cfg.winHeight){
-	// Set new window's height and width to variable
-	cfg.winWidth = winW;
-	cfg.winHeight = winH;
-
-	// Reposition/Resize elements
-	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
-	progressBarBack.setPosition(10, cfg.winHeight - 16);
-	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
-	progressBarFront.setPosition(10, cfg.winHeight - 16);
-
-	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
-	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
-	titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
-	titleTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+72);
-	albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
-
-	for (int i = 0; i<barAmount; i++){
-		barRect[i].setSize(sf::Vector2f(1, 10));
-		barRect[i].setFillColor(sf::Color::White);
-		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
-		barRectShadow[i].setSize(sf::Vector2f(1, 10));
-		barRectShadow[i].setFillColor(sf::Color::Black);
-		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+2, cfg.winHeight*0.65-20+2);
-	}
-	barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 }
 
 /*
@@ -383,12 +331,7 @@ std::vector<Button> buttonList = {
    #######################################################   */
 
 int main(){
-	float fft[2048];                                        //FFT array (1/2 of freq of samples)
-	float bars[barAmount];                                  //Array holding bars values
-	float smoothingBars[barAmount][smoothBy] = { 0 };       //Array holding variables used for smoothing bars
-	double time, duration;                                  //Time and duration of track
 	const sf::Color winBackground = cfg.grey;               //Color of the window's background
-	float aveBars[barAmount];
 
 	//######################################################### INITALIZE EVERYTHING
 
@@ -411,56 +354,6 @@ int main(){
 	window.setFramerateLimit(cfg.winFPS);
 	window.setKeyRepeatEnabled(false);
 
-	// ######################################################### CHANGE STYLES
-
-	// Change "duration and current time" text style
-	progressBarTime.setFont(cfg.fBold);
-	progressBarTime.setCharacterSize(18);
-	progressBarTime.setFillColor(sf::Color::White);
-
-	// Change "progress bar background" style
-	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
-	progressBarBack.setPosition(10, cfg.winHeight - 16);
-	progressBarBack.setFillColor(sf::Color(40, 40, 40, 255));
-
-	// Change "progress bar front" style
-	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
-	progressBarFront.setPosition(10, cfg.winHeight - 16);
-	progressBarFront.setFillColor(sf::Color::White);
-
-	// Change "album cover image" style
-	albumCover.setTexture(&texture);
-	albumCover.setSize(sf::Vector2f(128,128));
-	albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
-
-	// Change "artist text" and it's shadow style
-	authorText.setFont(cfg.fBold);
-	authorText.setCharacterSize(50);
-	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
-	authorTextShadow.setFont(cfg.fBold);
-	authorTextShadow.setFillColor(sf::Color::Black);
-	authorTextShadow.setCharacterSize(50);
-	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
-
-	// Change "title text" and it's shadow style
-	titleText.setFont(cfg.fRegular);
-	titleText.setCharacterSize(30);
-	titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
-	titleTextShadow.setFont(cfg.fRegular);
-	titleTextShadow.setFillColor(sf::Color::Black);
-	titleTextShadow.setCharacterSize(30);
-	titleTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+72);
-
-	// Change "visualizer bars" style
-	for(int i=0; i<barAmount; i++){
-		barRect[i].setSize(sf::Vector2f(1, 10));
-		barRect[i].setFillColor(sf::Color::White);
-		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
-		barRectShadow[i].setSize(sf::Vector2f(1, 10));
-		barRectShadow[i].setFillColor(sf::Color::Black);
-		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+1, cfg.winHeight*0.65-20+1);
-	}
-
 	cfg.shader_brightness.setUniform("blur_radius", sf::Vector2f(0.003f, 0.003f));
 	cfg.shader_glass.setUniform("blur_radius", sf::Vector2f(0.001f, 0.001f));
 
@@ -468,9 +361,7 @@ int main(){
 
 	while (window.isOpen()){
 		// Get time and duration of track and set size of prograss bar
-		time = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetPosition(channel, BASS_POS_BYTE));
-		duration = BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetLength(channel, BASS_POS_BYTE));
-		progressBarFront.setSize(sf::Vector2f((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
+		spectrumComp.updateProgressBar(sf::Vector2f((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
 		
 		// Check state of channel
 		switch(BASS_ChannelIsActive(channel)){
@@ -484,31 +375,12 @@ int main(){
 		}
 
 		// Change progress bar text and position
-		progressBarTime.setString(toHumanTime(time) + "/" + toHumanTime(duration));
-		progressBarTime.setPosition(cfg.winWidth-10-progressBarTime.getLocalBounds().width, cfg.winHeight-42);
+		spectrumComp.updateProgressBarTime(channel);
 
 		//######################################################### VISUALIZER
 
 		// Take channel data, change it into visualizer bar data and smooth each bar
-		BASS_ChannelGetData(channel, fft, cfg.fftfreq);
-		for(int i=0; i<barAmount; i++){
-			float sum = 0;
-			for(int j = 0; j<smoothBy-1; j++){
-				smoothingBars[i][j] = smoothingBars[i][j+1];
-				sum += smoothingBars[i][j];
-			}
-			smoothingBars[i][smoothBy-1] = fft[i];
-			sum += smoothingBars[i][smoothBy-1];
-			// Set value of each bar by formula: -1 (to flip upside down bar) * square root of -> divide sum of smoothing values by smoothing var * 60% - 1px of window's height
-			bars[i] = -1.0f*sqrt(sum/smoothBy)*(cfg.winHeight*0.6f)-1.0f;
-		}
-
-		// Smooth all bars by taking average of neighbours and set their size
-		for(int i=0; i<barAmount; i++){
-			aveBars[i] = (bars[std::max(0, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
-			barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i],cfg.winHeight*-0.35)));
-			barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i],cfg.winHeight*-0.35)));
-		}
+		spectrumComp.updateVisualizerBars(channel);
 
 		//######################################################### WINDOW EVENTS
 
@@ -523,7 +395,7 @@ int main(){
 				// On window resize
 				case sf::Event::Resized:
 					window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-					windowResizing(event.size.width, event.size.height);
+					spectrumComp.onWindowResizing(event.size.width, event.size.height);
 					refreshAlbum();
 					break;
 				// On key press
@@ -554,27 +426,11 @@ int main(){
 		}
 
 		// Set artist and song title text
-		authorText.setString(author);
-		authorTextShadow.setString(author);
-		titleText.setString(title);
-		titleTextShadow.setString(title);
+		spectrumComp.updateAuthorAndTitle();
 
 		// Draw everything on the window
 		window.clear(winBackground);
-
-		window.draw(albumCoverSprite,&cfg.shader_brightness);
-		for(int i=0; i<barAmount; i++){
-			window.draw(barRectShadow[i]);
-			window.draw(barRect[i]);
-		}
-		window.draw(albumCover);
-		window.draw(authorTextShadow);
-		window.draw(authorText);
-		window.draw(titleTextShadow);
-		window.draw(titleText);
-		window.draw(progressBarBack);
-		window.draw(progressBarFront);
-		window.draw(progressBarTime);
+		spectrumComp.draw(window);
 		for(int i=0; i<buttonList.size(); i++){
 			buttonList[i].draw(window);
 		}

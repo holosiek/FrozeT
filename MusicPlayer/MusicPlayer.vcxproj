@@ -154,10 +154,12 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="maine.cpp" />
     <ClCompile Include="mymisc.cpp" />
+    <ClCompile Include="spectrumComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="mymisc.h" />
+    <ClInclude Include="spectrumComponent.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

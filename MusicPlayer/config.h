@@ -76,6 +76,8 @@ class Config {
 			|_|  |_|_/__/\__|
                  
 		*/
+		// Component in use
+		unsigned short compInUse = 0;
 		// Fonts
 		sf::Font fBold, fRegular, fNormal;
 		// Textures
