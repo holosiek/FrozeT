@@ -13,6 +13,7 @@
 #include <fstream>
 #include <shlobj.h>
 #include <windows.h>
+#include <sstream>
 //TagLib
 #include <tag.h>
 #include <fileref.h>
@@ -34,8 +35,17 @@ HSTREAM                   channel = 0;                         // Initialize cha
 std::vector<std::wstring>  tracks;                             // Initialize tracks vector, which will hold track paths
 int                      trackNow = 0;                         // Index of track used in tracks vector
 bool                    isPlaying = true;                      // Is stream playing?
+bool              isClickedWindow = false;
 
 sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle);
+
+/*
+################################## Did you click on window?
+*/
+
+void onWindowClick(bool a){
+	isClickedWindow = a;
+}
 
 /*
 ################################## File System Dialog functions
@@ -188,6 +198,8 @@ void playTrack(){
 		BASS_ChannelPlay(channel, FALSE);
 		isPlaying = true;
 
+		spectrumComp.onSongUpdate(BASS_ChannelBytes2Seconds(channel, BASS_ChannelGetLength(channel, BASS_POS_BYTE)));
+
 		// Load album image
 		refreshAlbum();
 	}
@@ -330,7 +342,7 @@ std::vector<Button> buttonList = {
 
    #######################################################   */
 
-int main(){
+int main(int argc, char **argv){
 	const sf::Color winBackground = cfg.grey;               //Color of the window's background
 
 	//######################################################### INITALIZE EVERYTHING
@@ -347,7 +359,15 @@ int main(){
 		std::cout << BASS_ErrorGetCode() << std::endl;
 		exit(EXIT_FAILURE);
 	};
-	openTakeShuffleMusic({L""});
+	if(argc == 1){
+		openTakeShuffleMusic({L""});
+	} else {
+		std::wstringstream ws;
+		ws << argv[1];
+		tracks = { ws.str() };
+		playTrack();
+	}
+	
 
 	// Initialize window frame settings
 	window.setVerticalSyncEnabled(false);
@@ -412,6 +432,12 @@ int main(){
 						}
 					}
 					break;
+				case sf::Event::MouseEntered:
+					onWindowClick(true);
+					break;
+				case sf::Event::MouseLeft:
+					onWindowClick(false);
+					break;
 				// On lost window focus
 				case sf::Event::LostFocus:
 					saveMode(true);
@@ -422,6 +448,14 @@ int main(){
 					break;
 				default:
 					break;
+			}
+		}
+
+		if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && isClickedWindow){
+			sf::Vector2i mouseCords = sf::Mouse::getPosition(window);
+			double getClicked = spectrumComp.onClickProgressBar(sf::Vector2i(mouseCords.x,mouseCords.y));
+			if(getClicked != -1){
+				BASS_ChannelSetPosition(channel, BASS_ChannelSeconds2Bytes(channel, getClicked), BASS_POS_BYTE);
 			}
 		}
 

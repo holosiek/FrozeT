@@ -7,9 +7,7 @@
 #include "config.h"
 #include "mymisc.h"
 
-SpectrumComp::SpectrumComp(){
-	// ######################################################### CHANGE STYLES
-
+ProgressBar::ProgressBar(){
 	// Change "duration and current time" text style
 	progressBarTime.setFont(cfg.fBold);
 	progressBarTime.setCharacterSize(18);
@@ -24,6 +22,43 @@ SpectrumComp::SpectrumComp(){
 	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
 	progressBarFront.setPosition(10, cfg.winHeight - 16);
 	progressBarFront.setFillColor(sf::Color::White);
+}
+
+void ProgressBar::setLength(sf::Vector2f amount){
+	progressBarFront.setSize(amount);
+}
+
+void ProgressBar::setText(std::string text){
+	progressBarTime.setString(text);
+	progressBarTime.setPosition(cfg.winWidth-10-progressBarTime.getLocalBounds().width, cfg.winHeight-42);
+}
+
+void ProgressBar::setTimeAndDuration(double tmp_duration){
+	duration = tmp_duration;
+}
+
+void ProgressBar::resize(){
+	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
+	progressBarBack.setPosition(10, cfg.winHeight - 16);
+	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
+	progressBarFront.setPosition(10, cfg.winHeight - 16);
+}
+
+void ProgressBar::draw(sf::RenderWindow &windowToDrawOn){
+	windowToDrawOn.draw(progressBarBack);
+	windowToDrawOn.draw(progressBarFront);
+	windowToDrawOn.draw(progressBarTime);
+}
+
+double ProgressBar::onClick(sf::Vector2i cords){
+	if(cords.x >= 10 && cords.x <= cfg.winWidth-10 && cords.y >= cfg.winHeight - 16 && cords.y <= cfg.winHeight - 10){
+		return ((double)(cords.x-10)/(cfg.winWidth-20))*duration;
+	}
+	return -1;
+}
+
+SpectrumComp::SpectrumComp(){
+	// ######################################################### CHANGE STYLES
 
 	// Change "album cover image" style
 	albumCover.setSize(sf::Vector2f(128,128));
@@ -62,14 +97,14 @@ SpectrumComp::SpectrumComp(){
 }
 
 void SpectrumComp::updateProgressBar(sf::Vector2f amount){
-	progressBarFront.setSize(amount);
+	progressBar.setLength(amount);
 }
 
 void SpectrumComp::updateProgressBarTime(HCHANNEL channelH){
+	double time, duration;
 	time = BASS_ChannelBytes2Seconds(channelH, BASS_ChannelGetPosition(channelH, BASS_POS_BYTE));
 	duration = BASS_ChannelBytes2Seconds(channelH, BASS_ChannelGetLength(channelH, BASS_POS_BYTE));
-	progressBarTime.setString(toHumanTime(time) + "/" + toHumanTime(duration));
-	progressBarTime.setPosition(cfg.winWidth-10-progressBarTime.getLocalBounds().width, cfg.winHeight-42);
+	progressBar.setText(toHumanTime(time) + "/" + toHumanTime(duration));
 }
 
 void SpectrumComp::updateVisualizerBars(HCHANNEL channelH){
@@ -107,10 +142,7 @@ void SpectrumComp::onWindowResizing(unsigned int winW, unsigned int winH){
 	cfg.winHeight = winH;
 
 	// Reposition/Resize elements
-	progressBarBack.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
-	progressBarBack.setPosition(10, cfg.winHeight - 16);
-	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
-	progressBarFront.setPosition(10, cfg.winHeight - 16);
+	progressBar.resize();
 
 	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
 	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
@@ -140,6 +172,10 @@ void SpectrumComp::setTitle(std::wstring titleT){
 	title = titleT;
 }
 
+void SpectrumComp::onSongUpdate(double tmp_duration){
+	progressBar.setTimeAndDuration(tmp_duration);
+}
+
 void SpectrumComp::draw(sf::RenderWindow &windowToDrawOn){
 	windowToDrawOn.draw(albumCoverSprite,&cfg.shader_brightness);
 	for(int i=0; i<barAmount; i++){
@@ -151,7 +187,9 @@ void SpectrumComp::draw(sf::RenderWindow &windowToDrawOn){
 	windowToDrawOn.draw(authorText);
 	windowToDrawOn.draw(titleTextShadow);
 	windowToDrawOn.draw(titleText);
-	windowToDrawOn.draw(progressBarBack);
-	windowToDrawOn.draw(progressBarFront);
-	windowToDrawOn.draw(progressBarTime);
+	progressBar.draw(windowToDrawOn);
+}
+
+double SpectrumComp::onClickProgressBar(sf::Vector2i cords){
+	return progressBar.onClick(cords);
 }

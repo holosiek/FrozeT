@@ -2,6 +2,20 @@
 #define SPECTRUMCOMPONENT
 
 #include "config.h"
+class ProgressBar {
+	private:
+		sf::Text progressBarTime;
+		sf::RectangleShape progressBarBack, progressBarFront;
+		double duration;
+	public:
+		void setLength(sf::Vector2f amount);
+		void setText(std::string text);
+		void setTimeAndDuration(double tmp_duration);
+		void resize();
+		void draw(sf::RenderWindow &windowToDrawOn);
+		double onClick(sf::Vector2i cords);
+		ProgressBar();
+};
 
 class SpectrumComp {
 	private:
@@ -16,11 +30,9 @@ class SpectrumComp {
 		float smoothingBars[barAmount][smoothBy] = { 0 };              // Array holding variables used for smoothing bars
 		float aveBars[barAmount];
 	    // Music variables
-		double time, duration;                                         // Time and duration of track
 	    std::wstring title, author;                                    // Variables holding title and author of music
 		// Shapes
-		sf::RectangleShape progressBarBack, progressBarFront;          // Rectangles of progress bar
-		sf::Text progressBarTime;                                      // Time display on progress bar
+		ProgressBar progressBar;                                       // Whole Progress Bar
 		sf::RectangleShape barRect[barAmount];                         // Visualizer bars
 		sf::RectangleShape barRectShadow[barAmount];                   // Visualizer bars shadow
 		sf::Text titleText; sf::Text titleTextShadow;                  // Title text and it's shadow
@@ -39,6 +51,8 @@ class SpectrumComp {
 		void onWindowResizing(unsigned int winW = cfg.winWidth, unsigned int winH = cfg.winHeight);
 		void setAuthor(std::wstring authorT);
 		void setTitle(std::wstring titleT);
+		void onSongUpdate(double tmp_duration);
+		double onClickProgressBar(sf::Vector2i cords);
 		SpectrumComp();
 };
 

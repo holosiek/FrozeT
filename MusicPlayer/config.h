@@ -76,6 +76,7 @@ class Config {
 			|_|  |_|_/__/\__|
                  
 		*/
+		// Working dir
 		// Component in use
 		unsigned short compInUse = 0;
 		// Fonts
