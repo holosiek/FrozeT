@@ -38,6 +38,9 @@ bool                    isPlaying = true;                      // Is stream play
 bool              isClickedWindow = false;
 
 sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle);
+sf::WindowHandle hwnd = window.getSystemHandle();              // Get window handle
+WINDOWPLACEMENT g_wpPrev = { sizeof(g_wpPrev) };               // Get window placement
+DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);                // Get window style
 
 /*
 ################################## Did you click on window?
@@ -323,6 +326,26 @@ void openTakeShuffleMusic(std::vector<std::wstring> args = {L""}){
 }
 
 /*
+################################## Set window to fullscreen
+*/
+
+void windowSetFullscreen(sf::WindowHandle handle){
+	if(cfg.isFullscreen == false){
+		MONITORINFO mi = { sizeof(mi) };
+		if (GetWindowPlacement(handle, &g_wpPrev) && GetMonitorInfo(MonitorFromWindow(handle, MONITOR_DEFAULTTOPRIMARY), &mi)) {
+			SetWindowLong(handle, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
+			SetWindowPos(handle, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+		}
+		cfg.isFullscreen = true;
+	} else {
+		SetWindowLong(handle, GWL_STYLE, dwStyle | WS_OVERLAPPEDWINDOW);
+		SetWindowPlacement(handle, &g_wpPrev);
+		SetWindowPos(handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+		cfg.isFullscreen = false;
+	}
+}
+
+/*
 ################################## Button List stored in std::vector
 */
 
@@ -420,8 +443,8 @@ int main(int argc, char **argv){
 					break;
 				// On key press
 				case sf::Event::KeyPressed:
-					if(event.key.code == sf::Keyboard::P){
-						playNext();
+					if(event.key.code == sf::Keyboard::F11){
+						windowSetFullscreen(hwnd);
 					}
 					break;
 				// On mouse press

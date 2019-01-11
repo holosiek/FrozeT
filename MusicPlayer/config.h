@@ -67,6 +67,8 @@ class Config {
 		const unsigned short winFPS   = 60;
 		// Window title
 		const std::string winTitle    = "FrozeT";
+		// Is window fullscreen?
+		bool isFullscreen = false;
 
 
 		/* #########################################
