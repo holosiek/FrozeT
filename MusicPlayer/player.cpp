@@ -245,7 +245,7 @@ namespace Player {
 		if(trackNow >= tracks.size()){
 			trackNow = 0;
 		}
-		logSys.log("INFO - player.cpp playNext()", "Playing next track #" + intToString(trackNow));
+		logSys.log("INFO - player.cpp playNext()", "Playing next track");
 
 		// Play track
 		playTrack();
@@ -258,7 +258,7 @@ namespace Player {
 		if(trackNow < 0){
 			trackNow = tracks.size()-1;
 		}
-		logSys.log("INFO - player.cpp playPrevious()", "Playing previous track #" + intToString(trackNow));
+		logSys.log("INFO - player.cpp playPrevious()", "Playing previous track");
 
 		// Play track
 		playTrack();
@@ -381,7 +381,7 @@ namespace Player {
 			// Take music from working directory, then shuffleTracks and play it
 			tracks = takeMusic(boost::filesystem::current_path());
 			shuffleTracks(tracks);
-			logSys.log("INFO - player.cpp takeMusicFromFolder()", "shuffleTracksd songs");
+			logSys.log("INFO - player.cpp takeMusicFromFolder()", "shuffled tracks");
 
 			// Play first track
 			playTrack();
@@ -403,7 +403,7 @@ namespace Player {
 				// Take music from path we chose, then shuffleTracks and play it
 				tracks = takeMusic((boost::filesystem::path) path);
 				shuffleTracks(tracks);
-				logSys.log("INFO - player.cpp takeMusicFromFolder()", "shuffleTracksd songs");
+				logSys.log("INFO - player.cpp takeMusicFromFolder()", "shuffled tracks");
 
 				// Play first track
 				playTrack();

@@ -154,7 +154,7 @@
     <ClCompile Include="button.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="logger.cpp" />
-    <ClCompile Include="maine.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="mymisc.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="spectrumComponent.cpp" />
