@@ -472,7 +472,9 @@ namespace Player {
 				case BASS_ACTIVE_PAUSED:  // PAUSED STATE
 					break;
 				default:
-					playNext();
+					if(tracks.size() != 0){
+						playNext();
+					}
 					break;
 			}
 
