@@ -22,7 +22,7 @@ class SpectrumComp {
 		// Bars
 		const static unsigned short barAmount = 62;                    // Amount of bars
 		unsigned short barSize = 10;                                   // Size of bars
-		const static unsigned short smoothBy = 9;                      // Amount of smoothing variables
+		const static unsigned short smoothBy = 19;                      // Amount of smoothing variables
 		int barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 
 		float fft[2048];                                               // FFT array (1/2 of freq of samples)

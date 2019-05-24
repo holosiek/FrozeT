@@ -1,0 +1,2 @@
+Special thanks to these threads and people:
+https://stackoverflow.com/questions/875249/how-to-get-current-directory

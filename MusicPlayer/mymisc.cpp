@@ -27,15 +27,22 @@ void Button::setFontSize(unsigned int size){
 	textDisplayer.setCharacterSize(size);
 }
 
+//Set icon of button
+void Button::setIcon(sf::Texture &tex){
+	icon.setTexture(tex);
+}
+
 //Update button size
 void Button::updateButton(){
 	border.setSize(sf::Vector2f(width,height));
 	border.setPosition(posX,posY);
+	icon.setPosition(posX,posY);
 }
 
 //Draw Button on the screen
 void Button::draw(sf::RenderWindow &win){
-	win.draw(border,&cfg.shader_glass);
+	win.draw(border);
+	win.draw(icon);
 	textDisplayer.setString(text);
 	win.draw(textDisplayer);
 }
@@ -75,6 +82,10 @@ Button::Button(std::wstring name, unsigned int x, unsigned int y, unsigned short
 Button::Button(std::wstring name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::wstring>), std::vector<std::wstring> arguments){
 	Button(name,x,y,wid,hei,funk,arguments,sf::Color(0,0,0,0));
 }
+
+/*
+	MISC
+*/
 
 //Return string with length of 2
 std::string toDoubleChars(std::string x){
@@ -121,10 +132,14 @@ std::string toHumanTime(double ti){
 	int timeToCheck = timeInt / 3600;
 	if (timeToCheck != 0){
 		str += intToString(timeToCheck) + ":";
+		timeInt -= timeToCheck * 3600;
+		timeToCheck = timeInt / 60;
+		str += toDoubleChars(intToString(timeToCheck)) + ":";
+	} else {
+		timeInt -= timeToCheck * 3600;
+		timeToCheck = timeInt / 60;
+		str += intToString(timeToCheck) + ":";
 	}
-	timeInt -= timeToCheck * 3600;
-	timeToCheck = timeInt / 60;
-	str += intToString(timeToCheck) + ":";
 	timeInt -= timeToCheck * 60;
 	str += toDoubleChars(intToString(timeInt));
 	return str;

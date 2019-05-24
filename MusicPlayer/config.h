@@ -1,12 +1,18 @@
 #ifndef CONFIG
 #define CONFIG
 
+#include "mymisc.h"
+#include "bass.h"
+
 class Config {
 	private:
 		// Name of fonts
 		const std::string s_fBold     = "Montserrat-Bold.otf";      //Bold Montserrat
 		const std::string s_fRegular  = "Montserrat-Regular.otf";   //Regular Montserrat
 		const std::string s_fNormal   = "PT-Sans-Normal.ttf";       //Normal PT Sans
+
+		void loadTextures();
+
 	public:
 		/* #########################################
 			 ___      _              
@@ -64,11 +70,15 @@ class Config {
 		unsigned short winWidth       = 960;
 		unsigned short winHeight      = 480;
 		// Window fps
-		const unsigned short winFPS   = 60;
+		const unsigned short winFPS   = 144;
 		// Window title
 		const std::string winTitle    = "FrozeT";
+		// Window scaling
+		float winScale = 1.0f;
 		// Is window fullscreen?
 		bool isFullscreen = false;
+		// Is HUD on?
+		bool drawHUD = true;
 
 
 		/* #########################################
@@ -84,7 +94,7 @@ class Config {
 		// Fonts
 		sf::Font fBold, fRegular, fNormal;
 		// Textures
-		sf::Texture emptyPixel;
+		sf::Texture emptyPixel, spr_play_button, spr_next_button, spr_previous_button, spr_pause_button, spr_stop_button;
 		// Shaders
 		sf::Shader shader_brightness, shader_glass;
 		// Red/Green/Blue colors

@@ -151,15 +151,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="button.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="logger.cpp" />
     <ClCompile Include="maine.cpp" />
     <ClCompile Include="mymisc.cpp" />
+    <ClCompile Include="player.cpp" />
     <ClCompile Include="spectrumComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="button.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="mymisc.h" />
+    <ClInclude Include="player.h" />
     <ClInclude Include="spectrumComponent.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="informations.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shad.frag" />
+    <None Include="shad.vert" />
+    <None Include="shad_glass.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
