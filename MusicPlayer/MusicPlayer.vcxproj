@@ -94,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\User\Desktop\C++\SFML-2.5.0x86\include;C:\Users\User\Desktop\C++\bass24;C:\Users\User\Desktop\C++\boost_1_67_0</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\Users\User\Desktop\C++\SFML-2.5.0x86\lib;C:\Users\User\Desktop\C++\bass24;C:\Users\User\Desktop\C++\boost_1_67_0\stage\lib</AdditionalLibraryDirectories>
@@ -125,6 +125,7 @@
       <AdditionalIncludeDirectories>F:\C++\SFML-2.5.0x86\include;F:\C++\bass24;F:\C++\boost_1_67_0;E:\TagLib\taglib;E:\TagLib\taglib\toolkit;E:\TagLib\taglib\mpeg;E:\TagLib\taglib\mpeg\id3v2;E:\TagLib\taglib\mpeg\id3v2\frames;E:\TagLib\taglib\mpeg\id3v1</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 // Standard
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -288,12 +289,8 @@ namespace Player {
 
 	// Shuffle tracks that are passed by referenced vector
 	void shuffleTracks(std::vector<std::wstring> &a_tracks){
-		std::random_device rd;
-		std::mt19937 rng(rd());
-		std::uniform_int_distribution<int> uni(0, a_tracks.size()-1);
-		for (int i = 0; i < a_tracks.size(); i++){
-			std::swap(a_tracks[i], a_tracks[uni(rng)]);
-		}
+		unsigned seed = time(NULL);
+		std::shuffle(a_tracks.begin(), a_tracks.end(), std::default_random_engine(seed));
 	}
 
 	/*

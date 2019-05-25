@@ -4,6 +4,7 @@
 // Boost
 #include <boost/filesystem.hpp>
 // Standard
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -61,8 +62,6 @@ int main(int argc, char **argv){
 
 	Player::init();
 	Player::draw();
-	
-	
 
 	/*
 	if(argc == 1){
