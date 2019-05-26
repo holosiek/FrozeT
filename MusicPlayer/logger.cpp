@@ -2,7 +2,8 @@
 #include <fstream>
 #include <string>
 #include <ctime>
-#include "logger.h"
+#include <random>
+#include "logger.hpp"
 
 void Logger::log(const std::string a_text){
 	Logger::log(std::wstring(a_text.begin(), a_text.end()));
@@ -37,5 +38,3 @@ Logger::Logger(){
 	file.close();
 }
 
-
-Logger logSys;

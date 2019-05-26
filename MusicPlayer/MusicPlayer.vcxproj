@@ -122,7 +122,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>F:\C++\SFML-2.5.0x86\include;F:\C++\bass24;F:\C++\boost_1_67_0;E:\TagLib\taglib;E:\TagLib\taglib\toolkit;E:\TagLib\taglib\mpeg;E:\TagLib\taglib\mpeg\id3v2;E:\TagLib\taglib\mpeg\id3v2\frames;E:\TagLib\taglib\mpeg\id3v1</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\C++\SFML-2.5.0x86\include;F:\C++\bass24;F:\C++\boost_1_67_0;E:\TagLib\taglib;E:\TagLib\taglib\toolkit;E:\TagLib\taglib\mpeg;E:\TagLib\taglib\mpeg\id3v2;E:\TagLib\taglib\mpeg\id3v2\frames;E:\TagLib\taglib\mpeg\id3v1;C:\Users\Holo\source\repos\MusicPlayer\MusicPlayer</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
@@ -161,17 +161,18 @@
     <ClCompile Include="spectrumComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="button.h" />
-    <ClInclude Include="config.h" />
-    <ClInclude Include="logger.h" />
-    <ClInclude Include="mymisc.h" />
-    <ClInclude Include="player.h" />
-    <ClInclude Include="spectrumComponent.h" />
+    <ClInclude Include="button.hpp" />
+    <ClInclude Include="config.hpp" />
+    <ClInclude Include="logger.hpp" />
+    <ClInclude Include="mymisc.hpp" />
+    <ClInclude Include="player.hpp" />
+    <ClInclude Include="spectrumComponent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="informations.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="config.json" />
     <None Include="shad.frag" />
     <None Include="shad.vert" />
     <None Include="shad_glass.frag" />

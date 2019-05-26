@@ -3,9 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include "bass.h"
-#include "spectrumComponent.h"
-#include "config.h"
-#include "mymisc.h"
+#include "spectrumComponent.hpp"
+#include "config.hpp"
+#include "mymisc.hpp"
 
 ProgressBar::ProgressBar(){
 	// Change "duration and current time" text style

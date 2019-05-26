@@ -4,8 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include <boost/filesystem.hpp>
 #include "bass.h"
-#include "mymisc.h"
-#include "config.h"
+#include "mymisc.hpp"
+#include "config.hpp"
 
 /*
 	Button class

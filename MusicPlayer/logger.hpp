@@ -11,6 +11,5 @@ class Logger{
 		void log(const char* a_prefix, const char* a_text);
 		void log(const char* a_text);
 };
-extern Logger logSys;
 
 #endif LOGGER

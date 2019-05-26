@@ -1,6 +1,8 @@
 // SFML
-#include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+// Boost
+#include <boost/filesystem.hpp>
 // Standard
 #include <algorithm>
 #include <iostream>
@@ -13,10 +15,6 @@
 #include <shlobj.h>
 #include <windows.h>
 #include <sstream>
-// Boost
-#include <boost/filesystem.hpp>
-// Bass
-#include "bass.h"
 // TagLib
 #include <tag.h>
 #include <fileref.h>
@@ -26,13 +24,15 @@
 #include <id3v2frame.h>
 #include <id3v2header.h>
 #include <attachedpictureframe.h>
+// Bass
+#include "bass.h"
 // Project related
-#include "config.h"
-#include "mymisc.h"
-#include "button.h"
-#include "spectrumComponent.h"
-#include "player.h"
-#include "logger.h"
+#include "logger.hpp"
+#include "config.hpp"
+#include "player.hpp"
+#include "spectrumComponent.hpp"
+#include "button.hpp"
+#include "mymisc.hpp"
 
 namespace Player {
 	/*
@@ -289,8 +289,7 @@ namespace Player {
 
 	// Shuffle tracks that are passed by referenced vector
 	void shuffleTracks(std::vector<std::wstring> &a_tracks){
-		unsigned seed = time(NULL);
-		std::shuffle(a_tracks.begin(), a_tracks.end(), std::default_random_engine(seed));
+		std::shuffle(a_tracks.begin(), a_tracks.end(), std::mt19937(time(NULL)));
 	}
 
 	/*

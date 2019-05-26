@@ -1,7 +1,7 @@
 #ifndef SPECTRUMCOMPONENT
 #define SPECTRUMCOMPONENT
 
-#include "config.h"
+#include "config.hpp"
 class ProgressBar {
 	private:
 		sf::Text progressBarTime;

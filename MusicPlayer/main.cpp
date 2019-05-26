@@ -26,13 +26,15 @@
 #include <attachedpictureframe.h>
 // Bass
 #include "bass.h"
+// JSON
+#include <nlohmann/json.hpp>
 // Project Related
-#include "mymisc.h"
-#include "button.h"
-#include "config.h"
-#include "spectrumComponent.h"
-#include "player.h"
-#include "logger.h"
+#include "logger.hpp"
+#include "config.hpp"
+#include "player.hpp"
+#include "spectrumComponent.hpp"
+#include "button.hpp"
+#include "mymisc.hpp"
 
 /*
 	TODO: Sort by modified time

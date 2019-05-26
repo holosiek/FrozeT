@@ -41,22 +41,22 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mymisc.h">
+    <ClInclude Include="logger.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="config.h">
+    <ClInclude Include="spectrumComponent.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="spectrumComponent.h">
+    <ClInclude Include="player.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="button.h">
+    <ClInclude Include="mymisc.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="player.h">
+    <ClInclude Include="button.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="logger.h">
+    <ClInclude Include="config.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,6 +74,9 @@
     </None>
     <None Include="shad_glass.frag">
       <Filter>Pliki zasobów\Shaders</Filter>
+    </None>
+    <None Include="config.json">
+      <Filter>Pliki zasobów</Filter>
     </None>
   </ItemGroup>
 </Project>

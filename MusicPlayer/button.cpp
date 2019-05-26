@@ -4,8 +4,8 @@
 // SFML
 #include <SFML/Graphics.hpp>
 // Project Related
-#include "button.h"
-#include "config.h"
+#include "button.hpp"
+#include "config.hpp"
 
 /*
 	################################################
