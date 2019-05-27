@@ -19,6 +19,7 @@ class Config{
 			#####################################
 			Name of fonts
 		*/
+
 		std::string s_fBold     = "Montserrat-Bold.otf"; //Bold Montserrat 
 		std::string s_fRegular  = "Montserrat-Regular.otf";   //Regular Montserrat 
 		std::string s_fNormal   = "PT-Sans-Normal.ttf";       //Normal PT Sans
@@ -27,9 +28,11 @@ class Config{
 			#####################################
 			Functions
 		*/
-
-		void loadSettings(nlohmann::json &a_json);
+		
 		void loadTextures();
+		void loadShaders();
+		void loadFonts();
+		void loadSettings(nlohmann::json &a_json);
 
 	public:
 		/*
