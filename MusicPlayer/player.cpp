@@ -43,7 +43,6 @@ namespace Player {
 
 	SpectrumComp spectrumComp;        // Spectrum component
 	HSTREAM channel = NULL;           // Bass channel
-	sf::Color winBackground;          // Window background
 	std::vector<std::wstring> tracks; // Initialize tracks vector, which will hold track paths
 	int trackNow = 0;                 // Index of track used in tracks vector
 	bool isSongPlaying = true;            // Is stream playing?
@@ -246,7 +245,7 @@ namespace Player {
 		if(trackNow >= tracks.size()){
 			trackNow = 0;
 		}
-		logSys.log("INFO - player.cpp playNext()", "Playing next track");
+		Logger::log("INFO - player.cpp playNext()", "Playing next track");
 
 		// Play track
 		playTrack();
@@ -259,7 +258,7 @@ namespace Player {
 		if(trackNow < 0){
 			trackNow = tracks.size()-1;
 		}
-		logSys.log("INFO - player.cpp playPrevious()", "Playing previous track");
+		Logger::log("INFO - player.cpp playPrevious()", "Playing previous track");
 
 		// Play track
 		playTrack();
@@ -271,12 +270,12 @@ namespace Player {
 		if(isSongPlaying){
 			BASS_ChannelPause(channel);
 			isSongPlaying = !isSongPlaying;
-			logSys.log("INFO - player.cpp pauseSong()", "Pausing song");
+			Logger::log("INFO - player.cpp pauseSong()", "Pausing song");
 			changePlayButtonIcon(1);
 		} else {
 			BASS_ChannelPlay(channel, FALSE);
 			isSongPlaying = !isSongPlaying;
-			logSys.log("INFO - player.cpp pauseSong()", "Resuming song");
+			Logger::log("INFO - player.cpp pauseSong()", "Resuming song");
 			changePlayButtonIcon(0);
 		}
 	}
@@ -303,12 +302,12 @@ namespace Player {
 		// [DEBUG] Check whenever selection in dialog changed
 		switch(uMsg){
 			case BFFM_INITIALIZED:
-				logSys.log("INFO - player.cpp dialogHandler()", "Dialog initalized");
+				Logger::log("INFO - player.cpp dialogHandler()", "Dialog initalized");
 				break;
 			case BFFM_SELCHANGED:
 				TCHAR path[MAX_PATH];
 				SHGetPathFromIDList((LPITEMIDLIST)lParam, path);
-				logSys.log("DEBUG - player.cpp dialogHandler() - path selected", path);
+				Logger::log("DEBUG - player.cpp dialogHandler() - path selected", path);
 				break;
 		}
 		return 0;
@@ -372,19 +371,19 @@ namespace Player {
 			BASS_ChannelStop(channel);
 			tracks.clear();
 			trackNow = 0;
-			logSys.log("INFO - player.cpp takeMusicFromFolder()", "Freed memory and stopped playing song");
+			Logger::log("INFO - player.cpp takeMusicFromFolder()", "Freed memory and stopped playing song");
 			
 			// Take music from working directory, then shuffleTracks and play it
 			tracks = takeMusic(boost::filesystem::current_path());
 			shuffleTracks(tracks);
-			logSys.log("INFO - player.cpp takeMusicFromFolder()", "shuffled tracks");
+			Logger::log("INFO - player.cpp takeMusicFromFolder()", "shuffled tracks");
 
 			// Play first track
 			playTrack();
-			logSys.log("INFO - player.cpp takeMusicFromFolder()", "Playing track");
+			Logger::log("INFO - player.cpp takeMusicFromFolder()", "Playing track");
 
 			// [DEBUG] Print how many songs are in this folder
-			logSys.log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + intToString(tracks.size()));	
+			Logger::log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + intToString(tracks.size()));	
 		} else {
 			// Open file browsing dialog and choose folder
 			std::string path = browseFilesDialog(a_dir);
@@ -394,19 +393,19 @@ namespace Player {
 				BASS_ChannelStop(channel);
 				tracks.clear();
 				trackNow = 0;
-				logSys.log("INFO - player.cpp takeMusicFromFolder()", "Freed memory and stopped playing song");
+				Logger::log("INFO - player.cpp takeMusicFromFolder()", "Freed memory and stopped playing song");
 
 				// Take music from path we chose, then shuffleTracks and play it
 				tracks = takeMusic((boost::filesystem::path) path);
 				shuffleTracks(tracks);
-				logSys.log("INFO - player.cpp takeMusicFromFolder()", "shuffled tracks");
+				Logger::log("INFO - player.cpp takeMusicFromFolder()", "shuffled tracks");
 
 				// Play first track
 				playTrack();
-				logSys.log("INFO - player.cpp takeMusicFromFolder()", "Playing track");
+				Logger::log("INFO - player.cpp takeMusicFromFolder()", "Playing track");
 
 				// [DEBUG] Print how many songs are in this folder
-				logSys.log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + intToString(tracks.size()));
+				Logger::log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + intToString(tracks.size()));
 			}
 		}
 	}
@@ -424,24 +423,16 @@ namespace Player {
 			if(!BASS_Init(cfg.deviceID, cfg.freq, NULL, hwnd, NULL)){
 				throw BASS_ErrorGetCode();
 			};
-			logSys.log("INFO - player.cpp init()", "Initalized bass");
+			Logger::log("INFO - player.cpp init()", "Initalized bass");
 		} catch(int e){
-			logSys.log("ERROR - player.cpp init()", "Number of bass error: " + intToString(e));
+			Logger::log("ERROR - player.cpp init()", "Number of bass error: " + intToString(e));
 		} catch(...){
-			logSys.log("ERROR - player.cpp init()", "Unexpected error!");
+			Logger::log("ERROR - player.cpp init()", "Unexpected error!");
 		}
 
 		// Apply window settings
-		window.setVerticalSyncEnabled(false);
-		window.setFramerateLimit(144);
-		window.setKeyRepeatEnabled(false);
-		winBackground = sf::Color::Color(123, 123, 123);
-		logSys.log("INFO - player.cpp init()", "Set window settings");
-
-		// Set shader variables
-		cfg.shader_brightness.setUniform("blur_radius", sf::Vector2f(0.003f, 0.003f));
-		cfg.shader_glass.setUniform("blur_radius", sf::Vector2f(0.001f, 0.001f));
-		logSys.log("INFO - player.cpp init()", "Updated shaders settings");
+		cfg.setWindowSettings(window);
+		Logger::log("INFO - player.cpp init()", "Set window settings");
 
 		// Push buttons
 		BASS_DEVICEINFO info;
@@ -449,7 +440,7 @@ namespace Player {
 			buttonListOfDevices.push_back(GUI::Button((std::string)info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0+a*30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey));
 			buttonListOfDevices[a-1].buttonValue = a;
 		}
-		logSys.log("INFO - player.cpp init()", "Appended buttons");
+		Logger::log("INFO - player.cpp init()", "Appended buttons");
 
 
 		takeMusicFromFolder();
@@ -566,7 +557,7 @@ namespace Player {
 			spectrumComp.updateAuthorAndTitle();
 
 			// Draw everything on the window
-			window.clear(winBackground);
+			window.clear(cfg.winBackground);
 			spectrumComp.draw(window);
 			if(cfg.drawHUD){
 				for(int i=0; i<buttonList.size(); i++){

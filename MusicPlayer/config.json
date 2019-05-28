@@ -11,9 +11,11 @@
   "fps": 144,
   "window_title": "FrozeT",
   "window_fullscreen_mode": false,
+  "window_background_color": 7829367,
   "draw_hud": true,
   "primary_font": "Montserrat-Bold.otf",
   "secondary_font": "Montserrat-Regular.otf",
-  "menu_font": "PT-Sans-Normal.ttf"
+  "menu_font": "PT-Sans-Normal.ttf",
+  "vsync": false
 }
 

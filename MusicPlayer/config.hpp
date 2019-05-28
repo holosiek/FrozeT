@@ -2,6 +2,7 @@
 #define CONFIG
 
 // SFML
+#include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 // Standard
 #include <iostream>
@@ -94,6 +95,12 @@ class Config{
 		// Is HUD on?
 		bool drawHUD = true;
 
+		// Should window vsync?
+		bool vsync = false;
+
+		// What is the color of the window?
+		sf::Color winBackground = sf::Color(123,123,123);
+
 
 		/*
 			#####################################
@@ -123,15 +130,19 @@ class Config{
 		const sf::Color lighter_grey  = sf::Color(216,216,216,255);
 		const sf::Color white         = sf::Color(255,255,255,255);
 
+		void setWindowColor(const int a_color);
+		void setWindowColor(const short a_r, const short a_g, const short a_b);
+		void setWindowSettings(sf::Window &a_win);
+
 		/*
 			#####################################
 			Constructors
 		*/
 
 		Config();
+		~Config();
 };
 
 extern Config cfg;
-extern Logger logSys;
 
 #endif CONFIG

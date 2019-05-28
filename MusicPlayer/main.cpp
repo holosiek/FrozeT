@@ -57,9 +57,10 @@
 	< should be fixed to allow going track by track, not choosing random song >
 */
 int main(int argc, char **argv){
-	logSys.log("INFO - main.cpp init()", " # START #");
+	Logger::clearLog();
+	Logger::log("INFO - main.cpp init()", " # START #");
 	for(int i=0; i<argc; i++){
-		logSys.log("INFO - main.cpp main() - Program argument #" + intToString(i), argv[i]);
+		Logger::log("INFO - main.cpp main() - Program argument #" + intToString(i), argv[i]);
 	}
 
 	Player::init();
