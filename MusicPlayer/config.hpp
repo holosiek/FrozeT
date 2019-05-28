@@ -133,6 +133,7 @@ class Config{
 		void setWindowColor(const int a_color);
 		void setWindowColor(const short a_r, const short a_g, const short a_b);
 		void setWindowSettings(sf::Window &a_win);
+		void init();
 
 		/*
 			#####################################

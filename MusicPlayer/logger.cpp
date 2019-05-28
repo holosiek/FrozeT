@@ -1,11 +1,13 @@
+// Standard
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <ctime>
-#include <random>
+// Project Related
 #include "logger.hpp"
 
-namespace Logger {
+namespace Logger{
+	// Log to file
 	void log(const std::string a_text){
 		Logger::log(std::wstring(a_text.begin(), a_text.end()));
 	}
@@ -34,6 +36,7 @@ namespace Logger {
 		Logger::log(L"[" + a_prefix + L"] " + a_text);
 	}
 
+	// Clear log file
 	void clearLog(){
 		std::wofstream file("log.txt");
 		file.close();

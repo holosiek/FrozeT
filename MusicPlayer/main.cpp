@@ -58,6 +58,7 @@
 */
 int main(int argc, char **argv){
 	Logger::clearLog();
+	cfg.init();
 	Logger::log("INFO - main.cpp init()", " # START #");
 	for(int i=0; i<argc; i++){
 		Logger::log("INFO - main.cpp main() - Program argument #" + intToString(i), argv[i]);

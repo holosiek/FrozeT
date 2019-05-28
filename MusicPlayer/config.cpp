@@ -180,6 +180,14 @@ void Config::loadFonts(){
 
 // Default constructor
 Config::Config(){
+}
+
+// Deconstructor
+Config::~Config(){
+}
+
+// Init of Config
+void Config::init(){
 	using json = nlohmann::json;
 	json confg;
 
@@ -201,11 +209,6 @@ Config::Config(){
 	loadTextures();
 	loadShaders();
 	loadFonts();
-}
-
-// Deconstructor
-Config::~Config(){
-
 }
 
 // Declare Config object
