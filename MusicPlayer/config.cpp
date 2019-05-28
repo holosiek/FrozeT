@@ -27,14 +27,15 @@ std::string relPathToExePath(std::string a_relPath){
 	Config setting functions
 */
 
-// Set window color [algorithm alpha]
+// Set window color
 void Config::setWindowColor(const int a_color){
 	int color = a_color;
-	short colorR = color%255;
-	color /= 255;
-	short colorG = color%255;
-	color /= 255;
-	short colorB = color%255;
+	short colorR = color/65025;
+	color %= 65025;
+	short colorG = color/255;
+	color %= 255;
+	short colorB = color;
+	std::cout << colorR << " " << colorG << " " << colorB;
 	winBackground = sf::Color(colorR,colorG,colorB);
 }
 void Config::setWindowColor(const short a_r, const short a_g, const short a_b){
