@@ -56,14 +56,26 @@
 
 	< should be fixed to allow going track by track, not choosing random song >
 */
-int main(int argc, char **argv){
+void init(int& a_argc, char**& a_argv){
+	// Clear logs
 	Logger::clearLog();
-	cfg.init();
 	Logger::log("INFO - main.cpp init()", " # START #");
-	for(int i=0; i<argc; i++){
-		Logger::log("INFO - main.cpp main() - Program argument #" + intToString(i), argv[i]);
+
+	// Log main args
+	for(int i=0; i<a_argc; i++){
+		Logger::log("INFO - main.cpp init() - Program argument #" + std::to_string(i), a_argv[i]);
 	}
 
+	// Initalize config
+	Config::init(cfg);
+}
+
+int main(int argc, char** argv){
+	
+	// Create config object, clear logs, log some stuff
+	init(argc, argv);
+
+	// Start main init
 	Player::init();
 	Player::draw();
 

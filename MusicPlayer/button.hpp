@@ -1,5 +1,4 @@
-#ifndef BUTTON
-#define BUTTON
+#pragma once
 
 /*
 	################################################################
@@ -104,5 +103,3 @@ namespace GUI {
 			Button(std::string arg_label, Position arg_positionType, sf::Vector2f arg_position, sf::Vector2f arg_padding, sf::Color arg_background);
 	};
 }
-
-#endif BUTTON

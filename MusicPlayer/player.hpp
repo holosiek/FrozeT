@@ -1,5 +1,4 @@
-#ifndef PLAYER
-#define PLAYER
+#pragma once
 
 namespace Player{
 	// Main Functions
@@ -32,5 +31,3 @@ namespace Player{
 	void onWindowClick(bool a_check);
 	void changePlayButtonIcon(int a_state);
 }
-
-#endif PLAYER

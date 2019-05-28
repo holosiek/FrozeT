@@ -42,7 +42,7 @@ void Config::setWindowColor(const short a_r, const short a_g, const short a_b){
 }
 
 // Set windows settings 
-void Config::setWindowSettings(sf::Window &a_win){
+void Config::setWindowSettings(sf::Window& a_win){
 	if(vsync){
 		a_win.setVerticalSyncEnabled(true);
 		a_win.setFramerateLimit(0);
@@ -59,7 +59,7 @@ void Config::setWindowSettings(sf::Window &a_win){
 */
 
 // Save to variables config options
-void Config::loadSettings(nlohmann::json &a_json){
+void Config::loadSettings(nlohmann::json& a_json){
 	try{
 		// Main and debug variables
 		programVersion  = a_json["version"];
@@ -88,7 +88,7 @@ void Config::loadSettings(nlohmann::json &a_json){
 		s_fBold         = a_json["primary_font"];
 		s_fRegular      = a_json["secondary_font"];
 		s_fNormal       = a_json["menu_font"];
-	} catch(std::exception &e){
+	} catch(std::exception& e){
 		Logger::log("ERROR - config.cpp loadSettings()", e.what());
 	} catch(...){
 		Logger::log("ERROR - config.cpp loadSettings()", "Unexpected error!");
@@ -143,7 +143,7 @@ void Config::loadShaders(){
 
 		// Inform that shaders are loaded
 		Logger::log("INFO - config.cpp loadFonts()", "Shaders loaded!");
-	} catch(std::exception &e){
+	} catch(std::exception& e){
 		Logger::log("ERROR - config.cpp loadShaders()", e.what());
 	} catch(...){
 		Logger::log("ERROR - config.cpp loadShaders()", "Unexpected error!");
@@ -166,7 +166,7 @@ void Config::loadFonts(){
 
 		// Inform that fonts are loaded
 		Logger::log("INFO - config.cpp loadFonts()", "Fonts loaded!");
-	} catch(std::exception &e){
+	} catch(std::exception& e){
 		Logger::log("ERROR - config.cpp loadFonts()", e.what());
 	} catch(...){
 		Logger::log("ERROR - config.cpp loadFonts()", "Unexpected error!");
@@ -187,7 +187,7 @@ Config::~Config(){
 }
 
 // Init of Config
-void Config::init(){
+void Config::init(Config& a_cfg){
 	using json = nlohmann::json;
 	json confg;
 
@@ -198,17 +198,17 @@ void Config::init(){
 			throw std::runtime_error("config.json loading failed!");
 		}
 		jsonRaw >> confg;
-	} catch(std::exception &e){
+	} catch(std::exception& e){
 		Logger::log("ERROR - config.cpp Config()", e.what());
 	} catch(...){
 		Logger::log("ERROR - config.cpp Config()", "Unexpected error!");
 	}
 	
 	// Load all textures, settings etc.
-	loadSettings(confg);
-	loadTextures();
-	loadShaders();
-	loadFonts();
+	a_cfg.loadSettings(confg);
+	a_cfg.loadTextures();
+	a_cfg.loadShaders();
+	a_cfg.loadFonts();
 }
 
 // Declare Config object

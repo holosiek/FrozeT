@@ -1,5 +1,4 @@
-#ifndef SPECTRUMCOMPONENT
-#define SPECTRUMCOMPONENT
+#pragma once
 
 #include "config.hpp"
 class ProgressBar {
@@ -55,5 +54,3 @@ class SpectrumComp {
 		double onClickProgressBar(sf::Vector2i cords);
 		SpectrumComp();
 };
-
-#endif SPECTRUMCOMPONENT

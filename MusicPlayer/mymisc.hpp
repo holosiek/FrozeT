@@ -1,5 +1,4 @@
-#ifndef MYMISC
-#define MYMISC
+#pragma once
 
 class Button {
 	private:
@@ -39,5 +38,3 @@ std::string dblToString(double);
 std::string floatToString(float);
 std::string intToString(int);
 std::string toHumanTime(double);
-
-#endif

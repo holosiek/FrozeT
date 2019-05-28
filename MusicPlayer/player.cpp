@@ -52,12 +52,7 @@ namespace Player {
 	DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);                // Get window style
 	bool isClickedWindow = false;
 	std::vector<GUI::Button> buttonListOfDevices = {};
-	std::vector<GUI::wButton> buttonList = {
-		GUI::wButton(L"Previous song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 90.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
-		GUI::wButton(L"Pause song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 60.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
-		GUI::wButton(L"Next song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
-		GUI::wButton(L"Open Folder", GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey)
-	};
+	std::vector<GUI::wButton> buttonList = {};
 
 	/*
 		###############################################
@@ -442,6 +437,15 @@ namespace Player {
 		}
 		Logger::log("INFO - player.cpp init()", "Appended buttons");
 
+
+		// Create buttons
+		std::vector<GUI::wButton> but = {
+			GUI::wButton(L"Previous song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 90.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
+			GUI::wButton(L"Pause song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 60.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
+			GUI::wButton(L"Next song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
+			GUI::wButton(L"Open Folder", GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey)
+		};
+		buttonList = std::move(but);
 
 		takeMusicFromFolder();
 	}
