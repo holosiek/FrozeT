@@ -26,7 +26,6 @@ namespace Player{
 	void changeChannel(unsigned short a_whichOne);
 	
 	// Window-related Functions
-	void windowSetFullscreen(sf::WindowHandle a_handle);
 	void saveMode(bool a_state);
 	void onWindowClick(bool a_check);
 	void changePlayButtonIcon(int a_state);

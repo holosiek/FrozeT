@@ -71,6 +71,9 @@ class Config{
 		// Freq of samples
 		DWORD fftfreq = BASS_DATA_FFT4096;
 
+		// Smoothness level
+		unsigned short smoothLevel = 1;
+
 
 		/*
 			#####################################

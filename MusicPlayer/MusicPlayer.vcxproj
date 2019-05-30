@@ -154,6 +154,8 @@
   <ItemGroup>
     <ClCompile Include="button.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="GUI\screen.cpp" />
+    <ClCompile Include="GUI\window.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mymisc.cpp" />
@@ -163,9 +165,12 @@
   <ItemGroup>
     <ClInclude Include="button.hpp" />
     <ClInclude Include="config.hpp" />
+    <ClInclude Include="GUI\screen.hpp" />
+    <ClInclude Include="GUI\window.hpp" />
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="mymisc.hpp" />
     <ClInclude Include="player.hpp" />
+    <ClInclude Include="song.hpp" />
     <ClInclude Include="spectrumComponent.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -104,44 +104,23 @@ void printDevices() {
 	}
 }
 
-//From double to string
-std::string dblToString(double x){
-	std::ostringstream strs;
-	strs << x;
-	return strs.str();
-}
-
-//From float to string
-std::string floatToString(float x){
-	std::ostringstream strs;
-	strs << x;
-	return strs.str();
-}
-
-//From int to string
-std::string intToString(int x){
-	std::ostringstream strs;
-	strs << x;
-	return strs.str();
-}
-
 //Change to human readable time from seconds
 std::string toHumanTime(double ti){
 	std::string str;
 	int timeInt = floor(ti);
 	int timeToCheck = timeInt / 3600;
 	if (timeToCheck != 0){
-		str += intToString(timeToCheck) + ":";
+		str += std::to_string(timeToCheck) + ":";
 		timeInt -= timeToCheck * 3600;
 		timeToCheck = timeInt / 60;
-		str += toDoubleChars(intToString(timeToCheck)) + ":";
+		str += toDoubleChars(std::to_string(timeToCheck)) + ":";
 	} else {
 		timeInt -= timeToCheck * 3600;
 		timeToCheck = timeInt / 60;
-		str += intToString(timeToCheck) + ":";
+		str += std::to_string(timeToCheck) + ":";
 	}
 	timeInt -= timeToCheck * 60;
-	str += toDoubleChars(intToString(timeInt));
+	str += toDoubleChars(std::to_string(timeInt));
 	return str;
 }
 

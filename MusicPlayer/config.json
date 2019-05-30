@@ -6,6 +6,7 @@
   "playback_device_id": -1,
   "channel_frequency": 44100,
   "fft_frequency": 2147483652,
+  "smoothLevel": 1,
   "window_width": 960,
   "window_height": 480,
   "fps": 144,

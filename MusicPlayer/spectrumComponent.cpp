@@ -6,6 +6,8 @@
 #include "spectrumComponent.hpp"
 #include "config.hpp"
 #include "mymisc.hpp"
+#include "song.hpp"
+#include "GUI/screen.hpp"
 
 ProgressBar::ProgressBar(){
 	// Change "duration and current time" text style
@@ -58,17 +60,15 @@ double ProgressBar::onClick(sf::Vector2i cords){
 }
 
 SpectrumComp::SpectrumComp(){
-	// ######################################################### CHANGE STYLES
-
 	// Change "album cover image" style
-	albumCover.setSize(sf::Vector2f(128,128));
-	albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
+	albumCover.setSize(sf::Vector2f(128.0f, 128.0f));
+	albumCover.setPosition(static_cast<float>(cfg.winWidth*0.15), static_cast<float>(cfg.winHeight*0.65));
 	albumCover.setTexture(&texture);
-	albumCover.setTextureRect(sf::IntRect(0,0,albumCover.getTexture()->getSize().x,albumCover.getTexture()->getSize().y));
+	albumCover.setTextureRect(sf::IntRect(0,0,albumCover.getTexture()->getSize().x, albumCover.getTexture()->getSize().y));
 
 	// Change "artist text" and it's shadow style
 	authorText.setFont(cfg.fBold);
-	authorText.setCharacterSize(50);
+	authorText.setCharacterSize(50u);
 	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
 	authorTextShadow.setFont(cfg.fBold);
 	authorTextShadow.setFillColor(sf::Color::Black);
@@ -93,47 +93,10 @@ SpectrumComp::SpectrumComp(){
 		barRectShadow[i].setFillColor(sf::Color::Black);
 		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+1, cfg.winHeight*0.65-20+1);
 	}
-	std::cout << "test" << std::endl;
 }
 
 void SpectrumComp::updateProgressBar(sf::Vector2f amount){
 	progressBar.setLength(amount);
-}
-
-void SpectrumComp::updateProgressBarTime(HCHANNEL channelH){
-	double time, duration;
-	time = BASS_ChannelBytes2Seconds(channelH, BASS_ChannelGetPosition(channelH, BASS_POS_BYTE));
-	duration = BASS_ChannelBytes2Seconds(channelH, BASS_ChannelGetLength(channelH, BASS_POS_BYTE));
-	progressBar.setText(toHumanTime(time) + "/" + toHumanTime(duration));
-}
-
-void SpectrumComp::updateVisualizerBars(HCHANNEL channelH){
-	BASS_ChannelGetData(channelH, fft, cfg.fftfreq);
-	for(int i=0; i<barAmount; i++){
-		float sum = 0;
-		for(int j = 0; j<smoothBy-1; j++){
-			smoothingBars[i][j] = smoothingBars[i][j+1];
-			sum += smoothingBars[i][j];
-		}
-		smoothingBars[i][smoothBy-1] = fft[i];
-		sum += smoothingBars[i][smoothBy-1];
-		// Set value of each bar by formula: -1 (to flip upside down bar) * square root of -> divide sum of smoothing values by smoothing var * 60% - 1px of window's height
-		bars[i] = -1.0f*sqrt(sum/smoothBy)*(cfg.winHeight*0.6f)-1.0f;
-	}
-
-	// Smooth all bars by taking average of neighbours and set their size
-	for(int i=0; i<barAmount; i++){
-		aveBars[i] = (bars[std::max(0, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
-		barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i],cfg.winHeight*-0.35)));
-		barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i],cfg.winHeight*-0.35)));
-	}
-}
-
-void SpectrumComp::updateAuthorAndTitle(){
-	authorText.setString(author);
-	authorTextShadow.setString(author);
-	titleText.setString(title);
-	titleTextShadow.setString(title);
 }
 
 void SpectrumComp::onWindowResizing(unsigned int winW, unsigned int winH){
@@ -161,35 +124,104 @@ void SpectrumComp::onWindowResizing(unsigned int winW, unsigned int winH){
 	barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
 }
 
-void SpectrumComp::setAuthor(std::wstring authorT){
-	author = authorT;
-	for(int i=0; i<author.size(); i++){ 
-		author[i] = ((int)(author[i]) >= 97 && (int)author[i] <= 122) ? (author[i]&'_') : author[i]; 
-	}
-}
-
-void SpectrumComp::setTitle(std::wstring titleT){
-	title = titleT;
-}
-
 void SpectrumComp::onSongUpdate(double tmp_duration){
 	progressBar.setTimeAndDuration(tmp_duration);
 }
 
-void SpectrumComp::draw(sf::RenderWindow &windowToDrawOn){
-	windowToDrawOn.draw(albumCoverSprite,&cfg.shader_brightness);
-	for(int i=0; i<barAmount; i++){
-		windowToDrawOn.draw(barRectShadow[i]);
-		windowToDrawOn.draw(barRect[i]);
-	}
-	windowToDrawOn.draw(albumCover);
-	windowToDrawOn.draw(authorTextShadow);
-	windowToDrawOn.draw(authorText);
-	windowToDrawOn.draw(titleTextShadow);
-	windowToDrawOn.draw(titleText);
-	progressBar.draw(windowToDrawOn);
-}
-
 double SpectrumComp::onClickProgressBar(sf::Vector2i cords){
 	return progressBar.onClick(cords);
+}
+
+/*
+	F I X E D
+*/
+
+void SpectrumComp::updateAuthorAndTitle(song& a_song){
+	// Update artist name
+	authorText.setString(a_song.artist);
+	authorTextShadow.setString(a_song.artist);
+
+	// Update title name
+	titleText.setString(a_song.title);
+	titleTextShadow.setString(a_song.title);
+}
+
+void SpectrumComp::draw(sf::RenderWindow& a_win){
+	a_win.draw(albumCoverSprite,&cfg.shader_brightness);
+	for(int i=0; i<barAmount; i++){
+		a_win.draw(barRectShadow[i]);
+		a_win.draw(barRect[i]);
+	}
+	a_win.draw(albumCover);
+	a_win.draw(authorTextShadow);
+	a_win.draw(authorText);
+	a_win.draw(titleTextShadow);
+	a_win.draw(titleText);
+	progressBar.draw(a_win);
+}
+
+void SpectrumComp::updateProgressBarTime(HCHANNEL& a_channel){
+	double time = BASS_ChannelBytes2Seconds(a_channel, BASS_ChannelGetPosition(a_channel, BASS_POS_BYTE));
+	double duration = BASS_ChannelBytes2Seconds(a_channel, BASS_ChannelGetLength(a_channel, BASS_POS_BYTE));
+	progressBar.setText(toHumanTime(time) + "/" + toHumanTime(duration));
+}
+
+void SpectrumComp::updateVisualizerBars(HCHANNEL& a_channel){
+	// Get channel data to array
+	float fft[2048];
+	BASS_ChannelGetData(a_channel, fft, cfg.fftfreq);
+	
+	// Smooth by taking multiple values of simple bar and taking avarage of them
+	for(size_t i=0; i<barAmount; i++){
+		float sum = 0;
+		for(int j=0; j<smoothBy-1; j++){
+			smoothingBars[i][j] = smoothingBars[i][j+1];
+			sum += smoothingBars[i][j];
+		}
+		smoothingBars[i][smoothBy-1] = fft[i];
+		sum += smoothingBars[i][smoothBy-1];
+		// Set value of each bar by formula: -1 (to flip upside down bar) * square root of -> divide sum of smoothing values by smoothing var * 60% - 1px of window's height
+		bars[i] = -1.0f*sqrt(sum/smoothBy)*(cfg.winHeight*0.6f)-1.0f;
+	}
+
+	// Smooth all bars by taking average of neighbours and set their size
+	switch(cfg.smoothLevel){
+		// No avarage
+		case 0:
+			for(size_t i=0; i<barAmount; i++){
+				aveBars[i] = bars[i];
+				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			}
+			break;
+
+		// Avarage of 3
+		default:
+		case 1:
+			for(size_t i=0; i<barAmount; i++){
+				aveBars[i] = (bars[std::max(0u, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
+				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			}
+			break;
+
+		// Avarage of 5
+		case 2:
+			for(size_t i=0; i<barAmount; i++){
+				aveBars[i] = (bars[std::max(0u, i - 2)] + bars[std::max(0u, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)] + bars[std::min(barAmount - 1, i + 2)]) / 5;
+				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			}
+			break;
+
+		// Experimental
+		case 3:
+			for(size_t i=0; i<barAmount; i++){
+				aveBars[i] = (bars[std::max(0u, i - 2)]+bars[std::max(0u, i - 1)]+bars[i]+bars[i]+bars[i]+bars[std::min(barAmount - 1, i + 1)]+bars[std::min(barAmount - 1, i + 2)])/5;
+				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			}
+			break;
+	}
+	
 }

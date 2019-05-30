@@ -15,6 +15,7 @@
 #include <shlobj.h>
 #include <windows.h>
 #include <sstream>
+#include <cctype> // toupper
 // TagLib
 #include <tag.h>
 #include <fileref.h>
@@ -33,52 +34,43 @@
 #include "spectrumComponent.hpp"
 #include "button.hpp"
 #include "mymisc.hpp"
+#include "song.hpp"
+#include "GUI/window.hpp"
+#include "GUI/screen.hpp"
 
-namespace Player {
+namespace Player{
 	/*
 		###############################################
 			Variables
 		###############################################
 	*/
 
-	SpectrumComp spectrumComp;        // Spectrum component
 	HSTREAM channel = NULL;           // Bass channel
 	std::vector<std::wstring> tracks; // Initialize tracks vector, which will hold track paths
-	int trackNow = 0;                 // Index of track used in tracks vector
+	size_t trackNow = 0;                 // Index of track used in tracks vector
 	bool isSongPlaying = true;            // Is stream playing?
 	sf::RenderWindow window(sf::VideoMode(cfg.winWidth, cfg.winHeight), cfg.winTitle);
-	sf::WindowHandle hwnd = window.getSystemHandle();
-	WINDOWPLACEMENT g_wpPrev = { sizeof(g_wpPrev) };               // Get window placement
-	DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);                // Get window style
+	
 	bool isClickedWindow = false;
 	std::vector<GUI::Button> buttonListOfDevices = {};
 	std::vector<GUI::wButton> buttonList = {};
+	song songNow;
+	// Screen related things
+	enum Screens{
+		None,
+		Spectrum,
+		Tracklist,
+		Settings
+	};
+	SpectrumComp spectrumComp;
+	Screens screenOnUse = Screens::Spectrum;
 
 	/*
 		###############################################
 			Window-related Functions
 		###############################################
 	*/
-
-	// Change window fullscreen or not
-	void windowSetFullscreen(sf::WindowHandle a_handle){
-		if(cfg.isFullscreen == false){
-			// "mi" will store monitor information, which will be used for positioning
-			MONITORINFO mi = { sizeof(mi) };
-			if(GetWindowPlacement(a_handle, &g_wpPrev) && GetMonitorInfo(MonitorFromWindow(a_handle, MONITOR_DEFAULTTOPRIMARY), &mi)){
-				// Set window to fullscreen
-				SetWindowLong(a_handle, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
-				SetWindowPos(a_handle, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-			}
-			cfg.isFullscreen = true;
-		} else {
-			// Set window to windowed
-			SetWindowLong(a_handle, GWL_STYLE, dwStyle | WS_OVERLAPPEDWINDOW);
-			SetWindowPlacement(a_handle, &g_wpPrev);
-			SetWindowPos(a_handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-			cfg.isFullscreen = false;
-		}
-	}
+	
 
 	// Set if program should go in safe mode [less GPU usege]
 	void saveMode(bool a_state){
@@ -126,7 +118,7 @@ namespace Player {
 						// Extract album cover as ByteVector and allocate memory
 						TagLib::ID3v2::AttachedPictureFrame *picFrame = (TagLib::ID3v2::AttachedPictureFrame*)(*i);
 						unsigned long picSize = picFrame->picture().size();
-						void *outImage = malloc(picSize);
+						void* outImage = malloc(picSize);
 						if (outImage){
 							// Copy to allocated memory whole picture data
 							memcpy(outImage, picFrame->picture().data(), picSize);
@@ -138,7 +130,7 @@ namespace Player {
 								// Set albumCoverSprite texture and position it on window
 								float ratio;
 								spectrumComp.albumCoverSprite.setTexture(spectrumComp.texture);
-								spectrumComp.albumCoverSprite.setPosition(sf::Vector2f(cfg.winWidth/2, cfg.winHeight/2));
+								spectrumComp.albumCoverSprite.setPosition(sf::Vector2f(static_cast<float>(cfg.winWidth/2), static_cast<float>(cfg.winHeight/2)));
 								spectrumComp.texture.setSmooth(true);
 								if(cfg.winWidth>cfg.winHeight){
 									ratio = cfg.winWidth/spectrumComp.albumCoverSprite.getLocalBounds().width;
@@ -151,6 +143,7 @@ namespace Player {
 								spectrumComp.albumCover.setTextureRect(sf::IntRect(0,0,spectrumComp.albumCover.getTexture()->getSize().x,spectrumComp.albumCover.getTexture()->getSize().y));
 							}
 						}
+						free(outImage);
 					}
 				}
 			}
@@ -161,7 +154,7 @@ namespace Player {
 	void changeChannel(unsigned short a_whichOne){
 		BASS_ChannelPause(channel);
 		if(!BASS_SetDevice(a_whichOne)){
-			BASS_Init(a_whichOne, cfg.freq, NULL, hwnd, NULL);
+			BASS_Init(a_whichOne, cfg.freq, NULL, window.getSystemHandle(), NULL);
 		}
 		BASS_ChannelSetDevice(channel, a_whichOne);
 		BASS_ChannelPlay(channel, false);
@@ -189,7 +182,7 @@ namespace Player {
 
 			// Diplay in console "Playing now"
 			std::cout << "-------------------------\nPlaying now: " << static_cast<boost::filesystem::path>(tracks[trackNow]).filename() << std::endl;
-			if (trackNow + 1 >= tracks.size()){
+			if(trackNow + 1 >= tracks.size()){
 				std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[0]).filename() << "\n\n\n\n";
 			} else {
 				std::cout << "Next: " << static_cast<boost::filesystem::path>(tracks[trackNow+1]).filename() << "\n\n\n\n";
@@ -197,13 +190,17 @@ namespace Player {
 
 			// Find title and author by pattern "Author - Title" in music filename
 			std::wstring toTitle    = tracks[trackNow];
-			std::size_t lastSlash   = toTitle.find_last_of(L"/\\");
-			std::size_t lastDot     = toTitle.find_last_of(L".");
-			std::size_t lastHyphen  = toTitle.find_last_of(L"-");
-			spectrumComp.setAuthor(tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1));
+			size_t lastSlash   = toTitle.find_last_of(L"/\\");
+			size_t lastDot     = toTitle.find_last_of(L".");
+			size_t lastHyphen  = toTitle.find_last_of(L"-");
+			songNow.artist = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
+			for(size_t i=0; i<songNow.artist.size(); i++){
+				songNow.artist[i] = std::toupper(songNow.artist[i]);
+			}
+			songNow.title = tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2);
 	
 			// Set author name to uppercase and save it to "title" var
-			spectrumComp.setTitle(tracks[trackNow].substr(lastHyphen+2,lastDot-lastHyphen-2));
+			spectrumComp.updateAuthorAndTitle(songNow);
 
 			// Change window name to music name
 			window.setTitle(tracks[trackNow].substr(lastSlash+1,lastDot-lastSlash-1) + L" | FrozeT");
@@ -283,7 +280,7 @@ namespace Player {
 
 	// Shuffle tracks that are passed by referenced vector
 	void shuffleTracks(std::vector<std::wstring> &a_tracks){
-		std::shuffle(a_tracks.begin(), a_tracks.end(), std::mt19937(time(NULL)));
+		std::shuffle(a_tracks.begin(), a_tracks.end(), std::mt19937(static_cast<unsigned int>(time(NULL))));
 	}
 
 	/*
@@ -378,7 +375,9 @@ namespace Player {
 			Logger::log("INFO - player.cpp takeMusicFromFolder()", "Playing track");
 
 			// [DEBUG] Print how many songs are in this folder
-			Logger::log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + intToString(tracks.size()));	
+			if(cfg.debugMode){
+				Logger::log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + std::to_string(tracks.size()));	
+			}
 		} else {
 			// Open file browsing dialog and choose folder
 			std::string path = browseFilesDialog(a_dir);
@@ -400,7 +399,9 @@ namespace Player {
 				Logger::log("INFO - player.cpp takeMusicFromFolder()", "Playing track");
 
 				// [DEBUG] Print how many songs are in this folder
-				Logger::log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + intToString(tracks.size()));
+				if(cfg.debugMode){
+					Logger::log("DEBUG - player.cpp takeMusicFromFolder()", "Amount of songs: " + std::to_string(tracks.size()));
+				}
 			}
 		}
 	}
@@ -415,12 +416,12 @@ namespace Player {
 	void init(){
 		// Initialize Bass
 		try{
-			if(!BASS_Init(cfg.deviceID, cfg.freq, NULL, hwnd, NULL)){
+			if(!BASS_Init(cfg.deviceID, cfg.freq, NULL, window.getSystemHandle(), NULL)){
 				throw BASS_ErrorGetCode();
 			};
 			Logger::log("INFO - player.cpp init()", "Initalized bass");
 		} catch(int e){
-			Logger::log("ERROR - player.cpp init()", "Number of bass error: " + intToString(e));
+			Logger::log("ERROR - player.cpp init()", "Number of bass error: " + std::to_string(e));
 		} catch(...){
 			Logger::log("ERROR - player.cpp init()", "Unexpected error!");
 		}
@@ -432,7 +433,7 @@ namespace Player {
 		// Push buttons
 		BASS_DEVICEINFO info;
 		for(int a = 1; BASS_GetDeviceInfo(a, &info); a++){
-			buttonListOfDevices.push_back(GUI::Button((std::string)info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0+a*30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey));
+			buttonListOfDevices.push_back(GUI::Button((std::string)info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f+a*30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey));
 			buttonListOfDevices[a-1].buttonValue = a;
 		}
 		Logger::log("INFO - player.cpp init()", "Appended buttons");
@@ -453,8 +454,11 @@ namespace Player {
 	// Draw window
 	void draw(){
 		while(window.isOpen()){
+			// Clear window
+			window.clear(cfg.winBackground);
+
 			// Get time and duration of track and set size of prograss bar
-			spectrumComp.updateProgressBar(sf::Vector2f((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE), 6));
+			spectrumComp.updateProgressBar(sf::Vector2f(static_cast<float>((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE)), 6.0f));
 		
 			// Check state of channel
 			switch(BASS_ChannelIsActive(channel)){
@@ -468,11 +472,10 @@ namespace Player {
 					}
 					break;
 			}
-
+			//######################################################### VISUALIZER
+			
 			// Change progress bar text and position
 			spectrumComp.updateProgressBarTime(channel);
-
-			//######################################################### VISUALIZER
 
 			// Take channel data, change it into visualizer bar data and smooth each bar
 			spectrumComp.updateVisualizerBars(channel);
@@ -481,19 +484,19 @@ namespace Player {
 
 			sf::Event event;
 			while(window.pollEvent(event)){
-				switch (event.type){
+				switch(event.type){
 					// On window close
 					case sf::Event::Closed:
 						window.close();
 						break;
 					// On window resize
 					case sf::Event::Resized:
-						window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+						window.setView(sf::View(sf::FloatRect(0.0f, 0.0f, event.size.width, event.size.height)));
 						spectrumComp.onWindowResizing(event.size.width, event.size.height);
-						for(int i=0; i<buttonList.size(); i++){
+						for(size_t i=0; i<buttonList.size(); i++){
 							buttonList[i].update();
 						}
-						for(int i=0; i<buttonListOfDevices.size(); i++){
+						for(size_t i=0; i<buttonListOfDevices.size(); i++){
 							buttonListOfDevices[i].update();
 						}
 						refreshAlbum();
@@ -501,10 +504,13 @@ namespace Player {
 					// On key press
 					case sf::Event::KeyPressed:
 						if(event.key.code == sf::Keyboard::F11){
-							windowSetFullscreen(hwnd);
+							GUI::Window::windowSetFullscreen(window.getSystemHandle());
 						} else 
 						if(event.key.code == sf::Keyboard::H){
 							cfg.drawHUD = !cfg.drawHUD;
+						}
+						if(event.key.code == sf::Keyboard::Space){
+							pauseSong();
 						}
 						break;
 					// On mouse press
@@ -558,13 +564,19 @@ namespace Player {
 			}
 
 			// Set artist and song title text
-			spectrumComp.updateAuthorAndTitle();
 
 			// Draw everything on the window
-			window.clear(cfg.winBackground);
-			spectrumComp.draw(window);
+			
+			switch(screenOnUse){
+				case Screens::Spectrum:
+					spectrumComp.draw(window);
+					break;
+				default:
+				case Screens::None:
+					break;
+			}
 			if(cfg.drawHUD){
-				for(int i=0; i<buttonList.size(); i++){
+				for(size_t i=0; i<buttonList.size(); i++){
 					buttonList[i].draw(window);
 				}
 				for(GUI::Button button : buttonListOfDevices){

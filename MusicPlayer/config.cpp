@@ -35,7 +35,6 @@ void Config::setWindowColor(const int a_color){
 	short colorG = color/255;
 	color %= 255;
 	short colorB = color;
-	std::cout << colorR << " " << colorG << " " << colorB;
 	winBackground = sf::Color(colorR,colorG,colorB);
 }
 void Config::setWindowColor(const short a_r, const short a_g, const short a_b){
@@ -74,6 +73,7 @@ void Config::loadSettings(nlohmann::json& a_json){
 		deviceID        = a_json["playback_device_id"];
 		freq            = a_json["channel_frequency"];
 		fftfreq         = a_json["fft_frequency"];
+		smoothLevel     = a_json["smoothLevel"];
 
 		// Window
 		winWidth        = a_json["window_width"];

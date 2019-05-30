@@ -71,7 +71,6 @@ void init(int& a_argc, char**& a_argv){
 }
 
 int main(int argc, char** argv){
-	
 	// Create config object, clear logs, log some stuff
 	init(argc, argv);
 
