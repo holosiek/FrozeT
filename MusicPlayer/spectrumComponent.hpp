@@ -6,9 +6,10 @@
 class ProgressBar final {
 	private:
 		sf::Text progressBarTime;
-		sf::RectangleShape progressBarBack, progressBarFront;
+		
 		double duration;
 	public:
+	sf::RectangleShape progressBarBack, progressBarFront;
 		void setLength(sf::Vector2f amount);
 		void setText(std::string text);
 		void setTimeAndDuration(double tmp_duration);
@@ -18,7 +19,7 @@ class ProgressBar final {
 		ProgressBar();
 };
 
-class SpectrumComp final : public Screen {
+class SpectrumComp final : public Screens::Screen{
 	private:
 		// Bars
 		const static size_t barAmount = 62;                    // Amount of bars
@@ -43,7 +44,7 @@ class SpectrumComp final : public Screen {
 		sf::Sprite albumCoverSprite;
 		sf::RectangleShape albumCover;
 		//
-		void updateProgressBar(sf::Vector2f amount);
+		void updateProgressBar(const sf::Vector2f& amount);
 		void updateAuthorAndTitle(song& a_song);
 		void onWindowResizing(unsigned int winW = cfg.winWidth, unsigned int winH = cfg.winHeight);
 		void onSongUpdate(double tmp_duration);
@@ -57,6 +58,6 @@ class SpectrumComp final : public Screen {
 		virtual void draw(sf::RenderWindow& a_win) final;
 
 		// F I X E D
-		void updateProgressBarTime(HCHANNEL& a_channelH);
-		void updateVisualizerBars(HCHANNEL& a_channel);
+		void updateProgressBarTime();
+		void updateVisualizerBars();
 };

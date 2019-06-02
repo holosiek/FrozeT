@@ -1,11 +1,9 @@
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
 #include "screen.hpp"
 
-Screen::Screen(){
+Screens::Screen::Screen(){
 
 }
 
-Screen::~Screen(){
+Screens::Screen::~Screen(){
 
 }

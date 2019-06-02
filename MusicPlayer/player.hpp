@@ -1,6 +1,9 @@
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 namespace Player{
+
 	// Main Functions
 	void init();
 	void draw();
@@ -29,4 +32,6 @@ namespace Player{
 	void saveMode(bool a_state);
 	void onWindowClick(bool a_check);
 	void changePlayButtonIcon(int a_state);
-}
+
+	extern HSTREAM channel;
+};

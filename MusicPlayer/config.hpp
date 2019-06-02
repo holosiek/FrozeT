@@ -3,15 +3,10 @@
 // SFML
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
-// Standard
-#include <iostream>
 // Bass
 #include "bass.h"
 // JSON
 #include <nlohmann/json.hpp>
-// Project Related
-#include "logger.hpp"
-#include "mymisc.hpp"
 
 class Config{
 	private:

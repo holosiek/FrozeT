@@ -6,6 +6,7 @@
 #include "spectrumComponent.hpp"
 #include "config.hpp"
 #include "mymisc.hpp"
+#include "player.hpp"
 #include "song.hpp"
 #include "GUI/screen.hpp"
 
@@ -24,10 +25,6 @@ ProgressBar::ProgressBar(){
 	progressBarFront.setSize(sf::Vector2f(cfg.winWidth - 20, 6));
 	progressBarFront.setPosition(10, cfg.winHeight - 16);
 	progressBarFront.setFillColor(sf::Color::White);
-}
-
-void ProgressBar::setLength(sf::Vector2f amount){
-	progressBarFront.setSize(amount);
 }
 
 void ProgressBar::setText(std::string text){
@@ -95,8 +92,8 @@ SpectrumComp::SpectrumComp(){
 	}
 }
 
-void SpectrumComp::updateProgressBar(sf::Vector2f amount){
-	progressBar.setLength(amount);
+void SpectrumComp::updateProgressBar(const sf::Vector2f& amount){
+	progressBar.progressBarFront.setSize(amount);
 }
 
 void SpectrumComp::onWindowResizing(unsigned int winW, unsigned int winH){
@@ -146,30 +143,16 @@ void SpectrumComp::updateAuthorAndTitle(song& a_song){
 	titleTextShadow.setString(a_song.title);
 }
 
-void SpectrumComp::draw(sf::RenderWindow& a_win){
-	a_win.draw(albumCoverSprite,&cfg.shader_brightness);
-	for(int i=0; i<barAmount; i++){
-		a_win.draw(barRectShadow[i]);
-		a_win.draw(barRect[i]);
-	}
-	a_win.draw(albumCover);
-	a_win.draw(authorTextShadow);
-	a_win.draw(authorText);
-	a_win.draw(titleTextShadow);
-	a_win.draw(titleText);
-	progressBar.draw(a_win);
-}
-
-void SpectrumComp::updateProgressBarTime(HCHANNEL& a_channel){
-	double time = BASS_ChannelBytes2Seconds(a_channel, BASS_ChannelGetPosition(a_channel, BASS_POS_BYTE));
-	double duration = BASS_ChannelBytes2Seconds(a_channel, BASS_ChannelGetLength(a_channel, BASS_POS_BYTE));
+void SpectrumComp::updateProgressBarTime(){
+	double time = BASS_ChannelBytes2Seconds(Player::channel, BASS_ChannelGetPosition(Player::channel, BASS_POS_BYTE));
+	double duration = BASS_ChannelBytes2Seconds(Player::channel, BASS_ChannelGetLength(Player::channel, BASS_POS_BYTE));
 	progressBar.setText(toHumanTime(time) + "/" + toHumanTime(duration));
 }
 
-void SpectrumComp::updateVisualizerBars(HCHANNEL& a_channel){
+void SpectrumComp::updateVisualizerBars(){
 	// Get channel data to array
 	float fft[2048];
-	BASS_ChannelGetData(a_channel, fft, cfg.fftfreq);
+	BASS_ChannelGetData(Player::channel, fft, cfg.fftfreq);
 	
 	// Smooth by taking multiple values of simple bar and taking avarage of them
 	for(size_t i=0; i<barAmount; i++){
@@ -224,4 +207,33 @@ void SpectrumComp::updateVisualizerBars(HCHANNEL& a_channel){
 			break;
 	}
 	
+}
+
+void SpectrumComp::draw(sf::RenderWindow& a_win){
+	// Clear window
+	a_win.clear(cfg.winBackground);
+
+	// Get time and duration of track and set size of prograss bar
+	updateProgressBar(sf::Vector2f(static_cast<float>((cfg.winWidth - 20)*BASS_ChannelGetPosition(Player::channel, BASS_POS_BYTE) / BASS_ChannelGetLength(Player::channel, BASS_POS_BYTE)), 6.0f));
+	
+	// Change progress bar text and position
+	updateProgressBarTime();
+
+	// Take channel data, change it into visualizer bar data and smooth each bar
+	updateVisualizerBars();
+
+		a_win.draw(albumCoverSprite,&cfg.shader_brightness);
+		for(int i=0; i<barAmount; i++){
+			a_win.draw(barRectShadow[i]);
+			a_win.draw(barRect[i]);
+		}
+		a_win.draw(albumCover);
+	a_win.draw(authorTextShadow);
+	a_win.draw(authorText);
+	a_win.draw(titleTextShadow);
+	a_win.draw(titleText);
+		progressBar.draw(a_win);
+
+	
+	//a_win.display();
 }

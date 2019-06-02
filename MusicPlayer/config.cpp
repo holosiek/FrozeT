@@ -16,7 +16,7 @@
 // Transform relative path to executable path [Used cuz of "default program" system]
 std::string relPathToExePath(std::string a_relPath){
 	char path[MAX_PATH];
-	GetModuleFileNameA(NULL, path, MAX_PATH);
+	GetModuleFileNameA(nullptr, path, MAX_PATH);
 	std::string::size_type pos = std::string(path).find_last_of("\\/");
 	std::string pathDir = std::string(path).substr(0, pos)+"\\";
 	return pathDir + a_relPath;

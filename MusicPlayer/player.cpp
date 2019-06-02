@@ -7,23 +7,16 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <math.h>
-#include <cmath>
 #include <vector>
 #include <random>
 #include <fstream>
 #include <shlobj.h>
 #include <windows.h>
-#include <sstream>
 #include <cctype> // toupper
 // TagLib
-#include <tag.h>
-#include <fileref.h>
 #include <mpegfile.h>
 #include <id3v1tag.h>
 #include <id3v2tag.h>
-#include <id3v2frame.h>
-#include <id3v2header.h>
 #include <attachedpictureframe.h>
 // Bass
 #include "bass.h"
@@ -33,10 +26,8 @@
 #include "player.hpp"
 #include "spectrumComponent.hpp"
 #include "button.hpp"
-#include "mymisc.hpp"
 #include "song.hpp"
 #include "GUI/window.hpp"
-#include "GUI/screen.hpp"
 
 namespace Player{
 	/*
@@ -44,8 +35,8 @@ namespace Player{
 			Variables
 		###############################################
 	*/
+	HSTREAM channel = NULL;
 
-	HSTREAM channel = NULL;           // Bass channel
 	std::vector<std::wstring> tracks; // Initialize tracks vector, which will hold track paths
 	size_t trackNow = 0;                 // Index of track used in tracks vector
 	bool isSongPlaying = true;            // Is stream playing?
@@ -55,15 +46,11 @@ namespace Player{
 	std::vector<GUI::Button> buttonListOfDevices = {};
 	std::vector<GUI::wButton> buttonList = {};
 	song songNow;
+	
+	
+
 	// Screen related things
-	enum Screens{
-		None,
-		Spectrum,
-		Tracklist,
-		Settings
-	};
 	SpectrumComp spectrumComp;
-	Screens screenOnUse = Screens::Spectrum;
 
 	/*
 		###############################################
@@ -103,7 +90,7 @@ namespace Player{
 
 	// Set album cover on the back
 	void refreshAlbum(){
-		if(tracks.size() != 0){
+		if(!tracks.empty()){
 			// Load MP3 file which will be used to extract album cover and check for ID3v2 tag
 			TagLib::MPEG::File f(tracks[trackNow].c_str());
 			TagLib::ID3v2::Tag *id3v2tag = f.ID3v2Tag();
@@ -168,7 +155,7 @@ namespace Player{
 
 	// Play song
 	void playTrack(){
-		if(tracks.size() != 0){
+		if(!tracks.empty()){
 			// Free channel data
 			try{
 				if(channel != NULL && !BASS_StreamFree(channel)){
@@ -189,10 +176,10 @@ namespace Player{
 			}
 
 			// Find title and author by pattern "Author - Title" in music filename
-			std::wstring toTitle    = tracks[trackNow];
-			size_t lastSlash   = toTitle.find_last_of(L"/\\");
-			size_t lastDot     = toTitle.find_last_of(L".");
-			size_t lastHyphen  = toTitle.find_last_of(L"-");
+			std::wstring toTitle = tracks[trackNow];
+			size_t lastSlash   = toTitle.find_last_of(L'\\');
+			size_t lastDot     = toTitle.find_last_of(L'.');
+			size_t lastHyphen  = toTitle.find_last_of(L'-');
 			songNow.artist = tracks[trackNow].substr(lastSlash+1,lastHyphen-lastSlash-1);
 			for(size_t i=0; i<songNow.artist.size(); i++){
 				songNow.artist[i] = std::toupper(songNow.artist[i]);
@@ -280,7 +267,7 @@ namespace Player{
 
 	// Shuffle tracks that are passed by referenced vector
 	void shuffleTracks(std::vector<std::wstring> &a_tracks){
-		std::shuffle(a_tracks.begin(), a_tracks.end(), std::mt19937(static_cast<unsigned int>(time(NULL))));
+		std::shuffle(a_tracks.begin(), a_tracks.end(), std::mt19937(static_cast<unsigned int>(time(nullptr))));
 	}
 
 	/*
@@ -294,12 +281,14 @@ namespace Player{
 		// [DEBUG] Check whenever selection in dialog changed
 		switch(uMsg){
 			case BFFM_INITIALIZED:
-				Logger::log("INFO - player.cpp dialogHandler()", "Dialog initalized");
+				Logger::log("INFO - player.cpp dialogHandler()", "Dialog initialized");
 				break;
 			case BFFM_SELCHANGED:
 				TCHAR path[MAX_PATH];
-				SHGetPathFromIDList((LPITEMIDLIST)lParam, path);
+				SHGetPathFromIDList((LPITEMIDLIST)(lParam), path);
 				Logger::log("DEBUG - player.cpp dialogHandler() - path selected", path);
+				break;
+			default:
 				break;
 		}
 		return 0;
@@ -357,7 +346,7 @@ namespace Player{
 
 	// Choose folder method
 	void takeMusicFromFolder(const std::wstring a_dir = L""){
-		if(a_dir == L""){
+		if(a_dir.empty()){
 			// Stop, free and clear all variables used for playing
 			isSongPlaying = false;
 			BASS_ChannelStop(channel);
@@ -412,25 +401,19 @@ namespace Player{
 		###############################################
 	*/
 
-	// Init function [It's almost first to execute]
+	// Init function
 	void init(){
 		// Initialize Bass
-		try{
-			if(!BASS_Init(cfg.deviceID, cfg.freq, NULL, window.getSystemHandle(), NULL)){
-				throw BASS_ErrorGetCode();
-			};
-			Logger::log("INFO - player.cpp init()", "Initalized bass");
-		} catch(int e){
-			Logger::log("ERROR - player.cpp init()", "Number of bass error: " + std::to_string(e));
-		} catch(...){
-			Logger::log("ERROR - player.cpp init()", "Unexpected error!");
-		}
+		if(!BASS_Init(cfg.deviceID, cfg.freq, NULL, window.getSystemHandle(), nullptr)){
+			Logger::log("ERROR - player.cpp init()", "Number of bass error: " + std::to_string(BASS_ErrorGetCode()));
+		};
 
 		// Apply window settings
 		cfg.setWindowSettings(window);
 		Logger::log("INFO - player.cpp init()", "Set window settings");
 
 		// Push buttons
+		// TODO: to spectrumComponent
 		BASS_DEVICEINFO info;
 		for(int a = 1; BASS_GetDeviceInfo(a, &info); a++){
 			buttonListOfDevices.push_back(GUI::Button((std::string)info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f+a*30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey));
@@ -440,6 +423,7 @@ namespace Player{
 
 
 		// Create buttons
+		// TODO: to spectrumComponent
 		std::vector<GUI::wButton> but = {
 			GUI::wButton(L"Previous song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 90.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
 			GUI::wButton(L"Pause song", GUI::POS_NORMAL, sf::Vector2f(10.0f, 60.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey),
@@ -447,38 +431,37 @@ namespace Player{
 			GUI::wButton(L"Open Folder", GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey)
 		};
 		buttonList = std::move(but);
-
-		takeMusicFromFolder();
 	}
 	
 	// Draw window
 	void draw(){
 		while(window.isOpen()){
-			// Clear window
-			window.clear(cfg.winBackground);
+			switch(Screens::screenOnUse){
+				//# VISUALIZER #
+				case View::Spectrum:
+					spectrumComp.draw(window);
+					break;
 
-			// Get time and duration of track and set size of prograss bar
-			spectrumComp.updateProgressBar(sf::Vector2f(static_cast<float>((cfg.winWidth - 20)*BASS_ChannelGetPosition(channel, BASS_POS_BYTE) / BASS_ChannelGetLength(channel, BASS_POS_BYTE)), 6.0f));
-		
+				//# DEFAULT #
+				default:
+				case View::None:
+					break;
+			}
+			
 			// Check state of channel
 			switch(BASS_ChannelIsActive(channel)){
 				case BASS_ACTIVE_PLAYING: // PLAYING STATE
 					break;
 				case BASS_ACTIVE_PAUSED:  // PAUSED STATE
 					break;
-				default:
-					if(tracks.size() != 0){
+				case BASS_ACTIVE_STOPPED:
+					if(!tracks.empty()){
 						playNext();
 					}
 					break;
+				default:
+					break;
 			}
-			//######################################################### VISUALIZER
-			
-			// Change progress bar text and position
-			spectrumComp.updateProgressBarTime(channel);
-
-			// Take channel data, change it into visualizer bar data and smooth each bar
-			spectrumComp.updateVisualizerBars(channel);
 
 			//######################################################### WINDOW EVENTS
 
@@ -562,19 +545,6 @@ namespace Player{
 					BASS_ChannelSetPosition(channel, BASS_ChannelSeconds2Bytes(channel, getClicked), BASS_POS_BYTE);
 				}
 			}
-
-			// Set artist and song title text
-
-			// Draw everything on the window
-			
-			switch(screenOnUse){
-				case Screens::Spectrum:
-					spectrumComp.draw(window);
-					break;
-				default:
-				case Screens::None:
-					break;
-			}
 			if(cfg.drawHUD){
 				for(size_t i=0; i<buttonList.size(); i++){
 					buttonList[i].draw(window);
@@ -583,7 +553,6 @@ namespace Player{
 					button.draw(window);
 				}
 			}
-		
 			window.display();
 		}
 	}
