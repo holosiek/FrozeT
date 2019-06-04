@@ -1,5 +1,6 @@
 #pragma once
 
+/*
 class Button {
 	private:
 		// Button properties
@@ -31,7 +32,6 @@ class Button {
 		Button(std::wstring name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::wstring>), std::vector<std::wstring> arguments, sf::Color back);
 		Button(std::wstring name, unsigned int x, unsigned int y, unsigned short wid, unsigned short hei, void(*funk)(std::vector<std::wstring>), std::vector<std::wstring> arguments);
 };
+*/
 
 void printDevices();
-double biggerFloatOrDouble(float x, double y);
-std::string toHumanTime(double);

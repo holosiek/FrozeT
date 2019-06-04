@@ -8,7 +8,13 @@
 #include "mymisc.hpp"
 #include "player.hpp"
 #include "song.hpp"
+#include "button.hpp"
+#include "logger.hpp"
 #include "GUI/screen.hpp"
+#include "GUI/window.hpp"
+
+
+//std::vector<GUI::Button> buttonListOfDevices = {};
 
 ProgressBar::ProgressBar(){
 	// Change "duration and current time" text style
@@ -56,69 +62,63 @@ double ProgressBar::onClick(sf::Vector2i cords){
 	return -1;
 }
 
-SpectrumComp::SpectrumComp(){
+void SpectrumComp::fontReload(){
+	but_nextSong.update();
+	but_prevSong.update();
+	but_playSong.update();
+	but_chooseSong.update();
+}
+
+void SpectrumComp::reload(){
 	// Change "album cover image" style
 	albumCover.setSize(sf::Vector2f(128.0f, 128.0f));
-	albumCover.setPosition(static_cast<float>(cfg.winWidth*0.15), static_cast<float>(cfg.winHeight*0.65));
+	albumCover.setPosition(cfg.winWidth*0.15f, cfg.winHeight*0.65f);
 	albumCover.setTexture(&texture);
-	albumCover.setTextureRect(sf::IntRect(0,0,albumCover.getTexture()->getSize().x, albumCover.getTexture()->getSize().y));
+	albumCover.setTextureRect(sf::IntRect(0, 0, texture.getSize().x, texture.getSize().y));
 
 	// Change "artist text" and it's shadow style
-	authorText.setFont(cfg.fBold);
-	authorText.setCharacterSize(50u);
-	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
-	authorTextShadow.setFont(cfg.fBold);
-	authorTextShadow.setFillColor(sf::Color::Black);
-	authorTextShadow.setCharacterSize(50);
-	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
+	artistText.setFont(cfg.fBold);
+	artistText.setFillColor(sf::Color::White);
+	artistText.setCharacterSize(50u);
+	artistText.setPosition(cfg.winWidth*0.15f+150.0f, cfg.winHeight*0.65f+10.0f);
+	artistTextShadow.setFont(cfg.fBold);
+	artistTextShadow.setFillColor(sf::Color::Black);
+	artistTextShadow.setCharacterSize(50u);
+	artistTextShadow.setPosition(cfg.winWidth*0.15f+152.0f, cfg.winHeight*0.65f+12.0f);
 
 	// Change "title text" and it's shadow style
 	titleText.setFont(cfg.fRegular);
-	titleText.setCharacterSize(30);
-	titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
+	titleText.setFillColor(sf::Color::White);
+	titleText.setCharacterSize(30u);
+	titleText.setPosition(cfg.winWidth*0.15f+150.0f, cfg.winHeight*0.65f+70.0f);
 	titleTextShadow.setFont(cfg.fRegular);
 	titleTextShadow.setFillColor(sf::Color::Black);
-	titleTextShadow.setCharacterSize(30);
-	titleTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+72);
+	titleTextShadow.setCharacterSize(30u);
+	titleTextShadow.setPosition(cfg.winWidth*0.15f+152.0f, cfg.winHeight*0.65f+72.0f);
 	
 	// Change "visualizer bars" style
 	for(int i=0; i<barAmount; i++){
-		barRect[i].setSize(sf::Vector2f(1, 10));
+		barRect[i].setSize(sf::Vector2f(1.0f, 10.0f));
 		barRect[i].setFillColor(sf::Color::White);
-		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
-		barRectShadow[i].setSize(sf::Vector2f(1, 10));
+		barRect[i].setPosition(cfg.winWidth*0.15f+i*(cfg.winWidth*0.7f-barAmount+1.0f)/barAmount+5.0f, cfg.winHeight*0.65f-20.0f);
+		barRectShadow[i].setSize(sf::Vector2f(1.0f, 10.0f));
 		barRectShadow[i].setFillColor(sf::Color::Black);
-		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+1, cfg.winHeight*0.65-20+1);
+		barRectShadow[i].setPosition(cfg.winWidth*0.15f+i*(cfg.winWidth*0.7f-barAmount+1.0f)/barAmount+6.0f, cfg.winHeight*0.65f-19.0f);
 	}
-}
 
-void SpectrumComp::updateProgressBar(const sf::Vector2f& amount){
-	progressBar.progressBarFront.setSize(amount);
-}
+	// Set texture
+	texture.setSmooth(true);
 
-void SpectrumComp::onWindowResizing(unsigned int winW, unsigned int winH){
-	// Set new window's height and width to variable
-	cfg.winWidth = winW;
-	cfg.winHeight = winH;
+	// Clear buttons vectors
+	//buttonListOfDevices.clear();
 
-	// Reposition/Resize elements
-	progressBar.resize();
-
-	authorText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+10);
-	authorTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+12);
-	titleText.setPosition(cfg.winWidth*0.15+150,cfg.winHeight*0.65+70);
-	titleTextShadow.setPosition(cfg.winWidth*0.15+152,cfg.winHeight*0.65+72);
-	albumCover.setPosition(cfg.winWidth*0.15,cfg.winHeight*0.65);
-
-	for (int i = 0; i<barAmount; i++){
-		barRect[i].setSize(sf::Vector2f(1, 10));
-		barRect[i].setFillColor(sf::Color::White);
-		barRect[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5, cfg.winHeight*0.65-20);
-		barRectShadow[i].setSize(sf::Vector2f(1, 10));
-		barRectShadow[i].setFillColor(sf::Color::Black);
-		barRectShadow[i].setPosition(cfg.winWidth*0.15 + i * floor((cfg.winWidth*0.7-barAmount+1)/barAmount)+5+2, cfg.winHeight*0.65-20+2);
-	}
-	barWidth = floor((cfg.winWidth*0.7-barAmount+1)/barAmount)-5;
+	// Push buttons
+	//BASS_DEVICEINFO info;
+	//for(int a = 1; BASS_GetDeviceInfo(a, &info); a++){
+	//	buttonListOfDevices.emplace_back(GUI::Button((std::string)info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f+a*30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey));
+	//	buttonListOfDevices[a-1].buttonValue = a;
+	//}
+	Logger::log("INFO - player.cpp init()", "Appended buttons");
 }
 
 void SpectrumComp::onSongUpdate(double tmp_duration){
@@ -129,30 +129,108 @@ double SpectrumComp::onClickProgressBar(sf::Vector2i cords){
 	return progressBar.onClick(cords);
 }
 
+
 /*
-	F I X E D
+	###############################################
+		Event related
+	###############################################
 */
 
-void SpectrumComp::updateAuthorAndTitle(song& a_song){
+void SpectrumComp::onWindowResizing(float a_winWidth, float a_winHeight){
+	// Set new window's height and width to variable
+	cfg.winWidth = a_winWidth;
+	cfg.winHeight = a_winHeight;
+
+	// Reposition/Resize elements
+	progressBar.resize();
+
+	// Set new position of objects
+	artistText.setPosition(cfg.winWidth*0.15f+150.0f, cfg.winHeight*0.65f+10.0f);
+	artistTextShadow.setPosition(cfg.winWidth*0.15f+152.0f, cfg.winHeight*0.65f+12.0f);
+	titleText.setPosition(cfg.winWidth*0.15f+150.0f, cfg.winHeight*0.65f+70.0f);
+	titleTextShadow.setPosition(cfg.winWidth*0.15f+152.0f, cfg.winHeight*0.65f+72.0f);
+	albumCover.setPosition(cfg.winWidth*0.15f, cfg.winHeight*0.65f);
+
+	for(size_t i=0; i<barAmount; i++){
+		barRect[i].setSize(sf::Vector2f(1.0f, 10.0f));
+		barRect[i].setFillColor(sf::Color::White);
+		barRect[i].setPosition(cfg.winWidth*0.15f+i*(cfg.winWidth*0.7f-barAmount+1.0f)/barAmount+5.0f, cfg.winHeight*0.65f-20.0f);
+		barRectShadow[i].setSize(sf::Vector2f(1.0f, 10.0f));
+		barRectShadow[i].setFillColor(sf::Color::Black);
+		barRectShadow[i].setPosition(cfg.winWidth*0.15f+i*(cfg.winWidth*0.7f-barAmount+1.0f)/barAmount+6.0f, cfg.winHeight*0.65f-19.0f);
+	}
+	barWidth = (cfg.winWidth*0.7f-static_cast<float>(barAmount)+1.0f)/static_cast<float>(barAmount)-5.0f;
+}
+
+/*
+	###############################################
+		Misc.
+	###############################################
+*/
+
+//Return string with length of 2
+std::string toDoubleChars(std::string x){
+	if(x.size() == 1){
+		return "0" + x;
+	} else {
+		return x;
+	}
+}
+
+// Change seconds to time in HH:MM:SS format
+std::string changeTimeFormat(double& ti){
+	std::string str;
+	int timeInt = static_cast<int>(ti);
+	int timeToCheck = timeInt / 3600;
+	if (timeToCheck != 0){
+		str += std::to_string(timeToCheck) + ":";
+		timeInt -= timeToCheck * 3600;
+		timeToCheck = timeInt / 60;
+		str += toDoubleChars(std::to_string(timeToCheck)) + ":";
+	} else {
+		timeInt -= timeToCheck * 3600;
+		timeToCheck = timeInt / 60;
+		str += std::to_string(timeToCheck) + ":";
+	}
+	timeInt -= timeToCheck * 60;
+	str += toDoubleChars(std::to_string(timeInt));
+	return str;
+}
+
+/*
+	###############################################
+		Setters
+	###############################################
+*/
+
+// Update artist and title name on display
+void SpectrumComp::setAuthorAndTitle(const song& a_song) noexcept{
 	// Update artist name
-	authorText.setString(a_song.artist);
-	authorTextShadow.setString(a_song.artist);
+	artistText.setString(a_song.artist);
+	artistTextShadow.setString(a_song.artist);
 
 	// Update title name
 	titleText.setString(a_song.title);
 	titleTextShadow.setString(a_song.title);
 }
 
-void SpectrumComp::updateProgressBarTime(){
-	double time = BASS_ChannelBytes2Seconds(Player::channel, BASS_ChannelGetPosition(Player::channel, BASS_POS_BYTE));
-	double duration = BASS_ChannelBytes2Seconds(Player::channel, BASS_ChannelGetLength(Player::channel, BASS_POS_BYTE));
-	progressBar.setText(toHumanTime(time) + "/" + toHumanTime(duration));
+// Update progress bar time to HH:MM:SS/HH:MM:SS format
+void SpectrumComp::setProgressBarTime() noexcept{
+	double time = BASS_ChannelBytes2Seconds(cfg.channel, BASS_ChannelGetPosition(cfg.channel, BASS_POS_BYTE));
+	double duration = BASS_ChannelBytes2Seconds(cfg.channel, BASS_ChannelGetLength(cfg.channel, BASS_POS_BYTE));
+	progressBar.setText(changeTimeFormat(time) + "/" + changeTimeFormat(duration));
 }
 
-void SpectrumComp::updateVisualizerBars(){
+// Set progress bar width
+void SpectrumComp::setProgressBar(const sf::Vector2f& a_amount) noexcept{
+	progressBar.progressBarFront.setSize(a_amount);
+}
+
+// Update visualizer bars
+void SpectrumComp::setVisualizerBars(){
 	// Get channel data to array
 	float fft[2048];
-	BASS_ChannelGetData(Player::channel, fft, cfg.fftfreq);
+	BASS_ChannelGetData(cfg.channel, fft, cfg.fftfreq);
 	
 	// Smooth by taking multiple values of simple bar and taking avarage of them
 	for(size_t i=0; i<barAmount; i++){
@@ -173,40 +251,48 @@ void SpectrumComp::updateVisualizerBars(){
 		case 0:
 			for(size_t i=0; i<barAmount; i++){
 				aveBars[i] = bars[i];
-				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
-				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+				barRect[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
 			}
 			break;
 
 		// Avarage of 3
 		default:
 		case 1:
-			for(size_t i=0; i<barAmount; i++){
-				aveBars[i] = (bars[std::max(0u, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
-				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
-				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			for(short i=0; i<barAmount; i++){
+				aveBars[i] = (bars[std::max(0, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)]) / 3;
+				barRect[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
 			}
 			break;
 
 		// Avarage of 5
 		case 2:
-			for(size_t i=0; i<barAmount; i++){
-				aveBars[i] = (bars[std::max(0u, i - 2)] + bars[std::max(0u, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)] + bars[std::min(barAmount - 1, i + 2)]) / 5;
-				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
-				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			for(short i=0; i<barAmount; i++){
+				aveBars[i] = (bars[std::max(0, i - 2)] + bars[std::max(0, i - 1)] + bars[i] + bars[std::min(barAmount - 1, i + 1)] + bars[std::min(barAmount - 1, i + 2)]) / 5;
+				barRect[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
 			}
 			break;
 
 		// Experimental
 		case 3:
-			for(size_t i=0; i<barAmount; i++){
-				aveBars[i] = (bars[std::max(0u, i - 2)]+bars[std::max(0u, i - 1)]+bars[i]+bars[i]+bars[i]+bars[std::min(barAmount - 1, i + 1)]+bars[std::min(barAmount - 1, i + 2)])/5;
-				barRect[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
-				barRectShadow[i].setSize(sf::Vector2f(barWidth, biggerFloatOrDouble(aveBars[i], cfg.winHeight*-0.35)));
+			for(short i=0; i<barAmount; i++){
+				aveBars[i] = (bars[std::max(0, i - 2)]+bars[std::max(0, i - 1)]+bars[i]+bars[i]+bars[i]+bars[std::min(barAmount - 1, i + 1)]+bars[std::min(barAmount - 1, i + 2)])/5;
+				barRect[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
+				barRectShadow[i].setSize(sf::Vector2f(barWidth, std::max(aveBars[i], cfg.winHeight*-0.35f)));
 			}
 			break;
 	}
-	
+}
+
+/*
+	###############################################
+		Constructor, Decontructor & draw func.
+	###############################################
+*/
+SpectrumComp::SpectrumComp(){
+	reload();
 }
 
 void SpectrumComp::draw(sf::RenderWindow& a_win){
@@ -214,26 +300,135 @@ void SpectrumComp::draw(sf::RenderWindow& a_win){
 	a_win.clear(cfg.winBackground);
 
 	// Get time and duration of track and set size of prograss bar
-	updateProgressBar(sf::Vector2f(static_cast<float>((cfg.winWidth - 20)*BASS_ChannelGetPosition(Player::channel, BASS_POS_BYTE) / BASS_ChannelGetLength(Player::channel, BASS_POS_BYTE)), 6.0f));
+	setProgressBar(sf::Vector2f(((cfg.winWidth - 20.0f)*BASS_ChannelGetPosition(cfg.channel, BASS_POS_BYTE)/BASS_ChannelGetLength(cfg.channel, BASS_POS_BYTE)), 6.0f));
 	
 	// Change progress bar text and position
-	updateProgressBarTime();
+	setProgressBarTime();
 
 	// Take channel data, change it into visualizer bar data and smooth each bar
-	updateVisualizerBars();
+	setVisualizerBars();
 
-		a_win.draw(albumCoverSprite,&cfg.shader_brightness);
-		for(int i=0; i<barAmount; i++){
-			a_win.draw(barRectShadow[i]);
-			a_win.draw(barRect[i]);
+	// Handle events
+	sf::Event event;
+	while(a_win.pollEvent(event)){
+		switch(event.type){
+			// On window close
+			case sf::Event::Closed:
+				a_win.close();
+				break;
+
+			// On window resize
+			case sf::Event::Resized:
+				a_win.setView(sf::View(sf::FloatRect(0.0f, 0.0f, event.size.width, event.size.height)));
+				onWindowResizing(static_cast<float>(event.size.width), static_cast<float>(event.size.height));
+				//for(size_t i=0; i<buttonListOfDevices.size(); i++){
+				//	buttonListOfDevices[i].update();
+				//}
+				fontReload();
+				Player::refreshAlbum();
+				break;
+
+			// On key press
+			case sf::Event::KeyPressed:
+				switch(event.key.code){
+					case sf::Keyboard::F11:
+						GUI::Window::windowSetFullscreen(a_win.getSystemHandle());
+						break;
+					case sf::Keyboard::H:
+						cfg.drawHUD = !cfg.drawHUD;
+						break;
+					case sf::Keyboard::Space:
+						Player::pauseSong();
+						break;
+					default:
+						break;
+				}
+
+			// On mouse press
+			case sf::Event::MouseButtonPressed:
+				if(event.mouseButton.button == 0){
+					sf::Vector2i mousePos(event.mouseButton.x, event.mouseButton.y);
+					//for(GUI::Button button : buttonListOfDevices){
+					//	if(button.isClicked(mousePos)){
+					//		Player::changeChannel(button.buttonValue);
+					//	}
+					//}
+					if(but_playSong.checkIfClicked(mousePos)){
+						Player::pauseSong();
+					}
+					if(but_nextSong.checkIfClicked(mousePos)){
+						Player::playNext();
+					}
+					if(but_prevSong.checkIfClicked(mousePos)){
+						Player::playPrevious();
+					}
+					if(but_chooseSong.checkIfClicked(mousePos)){
+						Player::takeMusicFromFolder(L"Open folder which holds music");
+					}
+				}
+				break;
+
+			case sf::Event::MouseEntered:
+				cfg.isClickedWindow = true;
+				break;
+
+			case sf::Event::MouseLeft:
+				cfg.isClickedWindow = false;
+				break;
+
+			// On lost window focus
+			case sf::Event::LostFocus:
+				GUI::Window::saveMode(true, a_win);
+				break;
+
+			// On gain window focus
+			case sf::Event::GainedFocus:
+				GUI::Window::saveMode(false, a_win);
+				break;
+
+			case sf::Event::MouseMoved: {
+				sf::Vector2i mousePos(sf::Mouse::getPosition(a_win).x, sf::Mouse::getPosition(a_win).y);
+				but_nextSong.checkIfHover(mousePos);
+				but_prevSong.checkIfHover(mousePos);
+				but_playSong.checkIfHover(mousePos);
+				but_chooseSong.checkIfHover(mousePos);
+				break;
+			}
+			default:
+				break;
 		}
-		a_win.draw(albumCover);
-	a_win.draw(authorTextShadow);
-	a_win.draw(authorText);
+	}
+
+	a_win.draw(albumCoverSprite, &cfg.shader_brightness);
+	for(size_t i=0; i<barAmount; i++){
+		a_win.draw(barRectShadow[i]);
+		a_win.draw(barRect[i]);
+	}
+	a_win.draw(albumCover);
+	a_win.draw(artistTextShadow);
+	a_win.draw(artistText);
 	a_win.draw(titleTextShadow);
 	a_win.draw(titleText);
-		progressBar.draw(a_win);
+	progressBar.draw(a_win);
 
+	//if(cfg.drawHUD){
+	//	for(GUI::Button button : buttonListOfDevices){
+	//		button.draw(a_win);
+	//	}
+	//}
 	
-	//a_win.display();
+	if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && cfg.isClickedWindow){
+		sf::Vector2i mouseCords = sf::Mouse::getPosition(a_win);
+		double getClicked = onClickProgressBar(sf::Vector2i(mouseCords.x,mouseCords.y));
+		if(getClicked != -1){
+			BASS_ChannelSetPosition(cfg.channel, BASS_ChannelSeconds2Bytes(cfg.channel, getClicked), BASS_POS_BYTE);
+		}
+	}
+	
+	but_nextSong.draw(a_win);
+	but_prevSong.draw(a_win);
+	but_playSong.draw(a_win);
+	but_chooseSong.draw(a_win);
+
+	a_win.display();
 }

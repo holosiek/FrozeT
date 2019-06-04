@@ -76,8 +76,8 @@ void Config::loadSettings(nlohmann::json& a_json){
 		smoothLevel     = a_json["smoothLevel"];
 
 		// Window
-		winWidth        = a_json["window_width"];
-		winHeight       = a_json["window_height"];
+		winWidth        = static_cast<float>(a_json["window_width"]);
+		winHeight       = static_cast<float>(a_json["window_height"]);
 		setWindowColor   (a_json["window_background_color"]);
 		winFPS          = a_json["fps"];
 		winTitle        = a_json["window_title"];
@@ -103,6 +103,9 @@ void Config::loadTextures(){
 		Logger::log("ERROR - config.cpp loadTextures()", "images/emptypixel.png loading failed!");
 	} else {
 		emptyPixel.setRepeated(true);
+	}
+	if(!spr_blankAlbum.loadFromFile(relPathToExePath("images/blankAlbum.png"))){
+		Logger::log("ERROR - config.cpp loadTextures()", "images/blankAlbum.png loading failed!");
 	}
 
 	// HUD
@@ -151,18 +154,27 @@ void Config::loadShaders(){
 	}
 }
 
+#include "player.hpp"
 // Load all fonts
 void Config::loadFonts(){
 	try{
 		// Try to load fonts
 		if(!fBold.loadFromFile(relPathToExePath(s_fBold))){ 
 			throw std::runtime_error("Primary font loading failed!");
+		} else {
+			Player::fontReload();
 		}
+
 		if(!fRegular.loadFromFile(relPathToExePath(s_fRegular))){ 
 			throw std::runtime_error("Secondary font loading failed!");
+		} else {
+			Player::fontReload();
 		}
+
 		if(!fNormal.loadFromFile(relPathToExePath(s_fNormal))){ 
 			throw std::runtime_error("Menu font loading failed!");
+		} else {
+			Player::fontReload();
 		}
 
 		// Inform that fonts are loaded

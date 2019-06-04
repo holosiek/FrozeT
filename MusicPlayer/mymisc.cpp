@@ -9,7 +9,6 @@
 
 /*
 	Button class
-*/
 
 //Set button text
 void Button::setText(std::wstring str){
@@ -83,18 +82,10 @@ Button::Button(std::wstring name, unsigned int x, unsigned int y, unsigned short
 	Button(name,x,y,wid,hei,funk,arguments,sf::Color(0,0,0,0));
 }
 
+*/
 /*
 	MISC
 */
-
-//Return string with length of 2
-std::string toDoubleChars(std::string x){
-	if (x.size() == 1) {
-		return "0" + x;
-	} else {
-		return x;
-	}
-}
 
 //Print all devices that can play music
 void printDevices() {
@@ -102,29 +93,4 @@ void printDevices() {
 	for (int a = 1; BASS_GetDeviceInfo(a, &info); a++){
 		std::cout << a << ".  " << info.name << "   |   " << info.driver << std::endl;
 	}
-}
-
-//Change to human readable time from seconds
-std::string toHumanTime(double ti){
-	std::string str;
-	int timeInt = floor(ti);
-	int timeToCheck = timeInt / 3600;
-	if (timeToCheck != 0){
-		str += std::to_string(timeToCheck) + ":";
-		timeInt -= timeToCheck * 3600;
-		timeToCheck = timeInt / 60;
-		str += toDoubleChars(std::to_string(timeToCheck)) + ":";
-	} else {
-		timeInt -= timeToCheck * 3600;
-		timeToCheck = timeInt / 60;
-		str += std::to_string(timeToCheck) + ":";
-	}
-	timeInt -= timeToCheck * 60;
-	str += toDoubleChars(std::to_string(timeInt));
-	return str;
-}
-
-// Return bigger number
-double biggerFloatOrDouble(float x, double y){
-	return (x > y) ? x : y;
 }

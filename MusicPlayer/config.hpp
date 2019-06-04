@@ -57,6 +57,9 @@ class Config{
 			Channel
 		*/
 
+		// Channel storaging var
+		HSTREAM channel = NULL;
+
 		// DeviceID of device that will play music, -1 = default
 		short deviceID = 5;
 
@@ -76,8 +79,8 @@ class Config{
 		*/
 
 		// Window width ad height
-		unsigned short winWidth  = 960;
-		unsigned short winHeight = 480;
+		float winWidth  = 960.0f;
+		float winHeight = 480.0f;
 
 		// Window fps
 		unsigned short winFPS = 144;
@@ -94,6 +97,9 @@ class Config{
 		// Should window vsync?
 		bool vsync = false;
 
+		// Is window clicked
+		bool isClickedWindow = false;
+
 		// What is the color of the window?
 		sf::Color winBackground = sf::Color(123,123,123);
 
@@ -107,7 +113,7 @@ class Config{
 		sf::Font fBold, fRegular, fNormal;
 		
 		// Textures
-		sf::Texture emptyPixel, spr_play_button, spr_next_button, spr_previous_button, spr_pause_button, spr_stop_button;
+		sf::Texture spr_blankAlbum, emptyPixel, spr_play_button, spr_next_button, spr_previous_button, spr_pause_button, spr_stop_button;
 		
 		// Shaders
 		sf::Shader shader_brightness, shader_glass;

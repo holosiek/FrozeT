@@ -1,113 +1,73 @@
+// SFML
+#include <SFML/Graphics.hpp>
 // Standard
 #include <iostream>
 #include <string>
-// SFML
-#include <SFML/Graphics.hpp>
 // Project Related
 #include "button.hpp"
 #include "config.hpp"
 
 /*
-	################################################
-		SET functions
+	###############################################
+		Abstract button class
+	###############################################
+*/
+GUI::AButton::AButton(const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background) : position(a_position), padding(a_padding), backgroundColor(a_background), positionType(a_positionType){
+}
+
+GUI::AButton::~AButton(){
+}
+
+/*
+	###############################################
+		Button with text [std::string]
+	###############################################
 */
 
-void GUI::wButton::setIcon(sf::Texture &texture){
-	icon.setTexture(texture);
-}
+// Check if
 
-void GUI::wButton::setFontSize(unsigned int size){
-	labelContainer.setCharacterSize(size);
-}
-
-void GUI::wButton::setFont(sf::Font &font){
-	labelContainer.setFont(font);
-}
-
-void GUI::wButton::setTextColor(sf::Color color){
-	labelContainer.setFillColor(color);
-}
-
-void GUI::wButton::setSize(){
-	size.x = padding.x*2 + labelContainer.getGlobalBounds().width;
-	size.y = padding.y*2 + labelContainer.getGlobalBounds().height;
-	backgroundRect.setSize(size);
-}
-
-void GUI::wButton::setValue(unsigned short arg_number){
-	buttonValue = arg_number;
-}
-
-void GUI::wButton::setText(std::wstring str){
-	label = str;
-	labelContainer.setString(label);
-}
-
-void GUI::wButton::setPosition(GUI::Position arg_positionType, sf::Vector2f arg_position){
-	// Set new values
-	position = arg_position;
-	positionType = arg_positionType;
-
-	// Set new positions
+void GUI::Button::checkIfHover(const sf::Vector2i& a_mousePos){
 	switch(positionType){
 		case POS_NORMAL:
 		default:
-			backgroundRect.setPosition(position);
-			icon.setPosition(position);
-			labelContainer.setPosition(position.x+padding.x-labelContainer.getLocalBounds().left, position.y+padding.y-labelContainer.getLocalBounds().top);
+			if(a_mousePos.x >= position.x && a_mousePos.x <= (position.x + size.x) && a_mousePos.y <= (position.y + size.y) && a_mousePos.y >= position.y) {
+				backgroundShape.setFillColor(backgroundHover);
+			} else {
+				backgroundShape.setFillColor(backgroundColor);
+			}
 			break;
 		case POS_CENTER:
-			backgroundRect.setPosition(sf::Vector2f(cfg.winWidth/2,cfg.winHeight/2)+position);
-			icon.setPosition(sf::Vector2f(cfg.winWidth/2,cfg.winHeight/2)+position);
-			labelContainer.setPosition(cfg.winWidth/2+position.x+padding.x-labelContainer.getLocalBounds().left, cfg.winHeight/2+position.y+padding.y-labelContainer.getLocalBounds().top);
+			if(a_mousePos.x >= cfg.winWidth / 2 + position.x && a_mousePos.x <= (cfg.winWidth / 2 + position.x + size.x) && a_mousePos.y <= (cfg.winHeight / 2 + position.y + size.y) && a_mousePos.y >= cfg.winHeight / 2 + position.y) {
+				backgroundShape.setFillColor(backgroundHover);
+			} else {
+				backgroundShape.setFillColor(backgroundColor);
+			}
 			break;
 		case POS_BOTTOM:
-			backgroundRect.setPosition(sf::Vector2f(cfg.winWidth,cfg.winHeight)-position-size);
-			icon.setPosition(sf::Vector2f(cfg.winWidth,cfg.winHeight)-position-size);
-			labelContainer.setPosition(cfg.winWidth-position.x+padding.x-labelContainer.getLocalBounds().left-size.x, cfg.winHeight-position.y+padding.y-labelContainer.getLocalBounds().top-size.y);
+			if(a_mousePos.x >= cfg.winWidth - position.x - size.x && a_mousePos.x <= (cfg.winWidth - position.x) && a_mousePos.y >= (cfg.winHeight - position.y - size.y) && a_mousePos.y <= cfg.winHeight - position.y) {
+				backgroundShape.setFillColor(backgroundHover);
+			} else {
+				backgroundShape.setFillColor(backgroundColor);
+			}
 			break;
 	}
 }
 
-/*
-	################################################
-		UPDATE functions
-*/
-
-void GUI::wButton::update(){
-	setPosition(positionType, position);
-}
-
-// Draw button on window
-void GUI::wButton::draw(sf::RenderWindow &window){
-	// Draw icon and background of the button
-	window.draw(backgroundRect);
-	window.draw(icon);
-	// Draw text
-	labelContainer.setString(label);
-	window.draw(labelContainer);
-}
-
-/*
-	################################################
-		EVENT function
-*/
-
-bool GUI::wButton::isClicked(sf::Vector2i mousePos){
-	switch(positionType){
+bool GUI::Button::checkIfClicked(const sf::Vector2i& a_mousePos){
+	switch (positionType) {
 		case POS_NORMAL:
 		default:
-			if(mousePos.x >= position.x && mousePos.x <= (position.x+size.x) && mousePos.y <= (position.y+size.y) && mousePos.y >= position.y){
+			if(a_mousePos.x >= position.x && a_mousePos.x <= (position.x + size.x) && a_mousePos.y <= (position.y + size.y) && a_mousePos.y >= position.y) {
 				return true;
 			}
 			break;
 		case POS_CENTER:
-			if(mousePos.x >= cfg.winWidth/2+position.x && mousePos.x <= (cfg.winWidth/2+position.x+size.x) && mousePos.y <= (cfg.winHeight/2+position.y+size.y) && mousePos.y >= cfg.winHeight/2+position.y){
+			if(a_mousePos.x >= cfg.winWidth / 2 + position.x && a_mousePos.x <= (cfg.winWidth / 2 + position.x + size.x) && a_mousePos.y <= (cfg.winHeight / 2 + position.y + size.y) && a_mousePos.y >= cfg.winHeight / 2 + position.y) {
 				return true;
 			}
 			break;
 		case POS_BOTTOM:
-			if(mousePos.x >= cfg.winWidth-position.x-size.x && mousePos.x <= (cfg.winWidth-position.x) && mousePos.y >= (cfg.winHeight-position.y-size.y) && mousePos.y <= cfg.winHeight-position.y){
+			if(a_mousePos.x >= cfg.winWidth - position.x - size.x && a_mousePos.x <= (cfg.winWidth - position.x) && a_mousePos.y >= (cfg.winHeight - position.y - size.y) && a_mousePos.y <= cfg.winHeight - position.y) {
 				return true;
 			}
 			break;
@@ -115,165 +75,95 @@ bool GUI::wButton::isClicked(sf::Vector2i mousePos){
 	return false;
 }
 
-
-/*
-	################################################
-		CONSTRUCTORS
-*/
-
-
-GUI::wButton::wButton(std::wstring arg_label, GUI::Position arg_positionType, sf::Vector2f arg_position, sf::Vector2f arg_padding, sf::Color arg_background) : label(arg_label), positionType(arg_positionType), position(arg_position), padding(arg_padding), background(arg_background){
-	// Set background color of the button
-	backgroundRect.setFillColor(arg_background);
-
-	// Set default settings for button text
-	setFont(cfg.fNormal);
-	setFontSize(16);
-	setTextColor(sf::Color::Black);
-	setText(arg_label);
-
-	// Set size of the button
-	setSize();
-
-	// Set position of the button
-	setPosition(arg_positionType,arg_position);
-};
-
-/*
-	################################################
-		NORMAL BUTTON
-
-*/
-
-/*
-	################################################
-		SET functions
-*/
-
-void GUI::Button::setIcon(sf::Texture &texture){
-	icon.setTexture(texture);
-}
-
-void GUI::Button::setFontSize(unsigned int size){
-	labelContainer.setCharacterSize(size);
-}
-
-void GUI::Button::setFont(sf::Font &font){
-	labelContainer.setFont(font);
-}
-
-void GUI::Button::setTextColor(sf::Color color){
-	labelContainer.setFillColor(color);
-}
+// Setters
 
 void GUI::Button::setSize(){
-	size.x = padding.x*2 + labelContainer.getGlobalBounds().width;
-	size.y = padding.y*2 + labelContainer.getGlobalBounds().height;
-	backgroundRect.setSize(size);
+	size.x = padding.x*2 + labelShape.getGlobalBounds().width;
+	size.y = padding.y*2 + labelShape.getGlobalBounds().height;
+	backgroundShape.setSize(size);
 }
 
-void GUI::Button::setValue(unsigned short arg_number){
-	buttonValue = arg_number;
+void GUI::Button::setFontSize(const unsigned int& a_size){
+	labelShape.setCharacterSize(a_size);
 }
 
-void GUI::Button::setText(std::string str){
-	label = str;
-	labelContainer.setString(label);
+void GUI::Button::setFont(sf::Font& a_font){
+	labelShape.setFont(a_font);
 }
 
-void GUI::Button::setPosition(GUI::Position arg_positionType, sf::Vector2f arg_position){
+void GUI::Button::setTextColor(const sf::Color& a_color){
+	labelShape.setFillColor(a_color);
+}
+
+void GUI::Button::setText(const std::string& a_label){
+	labelShape.setString(a_label);
+}
+
+void GUI::Button::setText(const std::wstring& a_label){
+	labelShape.setString(a_label);
+}
+
+void GUI::Button::setPosition(const GUI::Position& a_positionType, const sf::Vector2f& a_position){
 	// Set new values
-	position = arg_position;
-	positionType = arg_positionType;
+	position = a_position;
+	positionType = a_positionType;
 
 	// Set new positions
 	switch(positionType){
 		case POS_NORMAL:
 		default:
-			backgroundRect.setPosition(position);
-			icon.setPosition(position);
-			labelContainer.setPosition(position.x+padding.x-labelContainer.getLocalBounds().left, position.y+padding.y-labelContainer.getLocalBounds().top);
+			backgroundShape.setPosition(position);
+			labelShape.setPosition(position.x+padding.x-labelShape.getLocalBounds().left, position.y+padding.y-labelShape.getLocalBounds().top);
 			break;
 		case POS_CENTER:
-			backgroundRect.setPosition(sf::Vector2f(cfg.winWidth/2,cfg.winHeight/2)+position);
-			icon.setPosition(sf::Vector2f(cfg.winWidth/2,cfg.winHeight/2)+position);
-			labelContainer.setPosition(cfg.winWidth/2+position.x+padding.x-labelContainer.getLocalBounds().left, cfg.winHeight/2+position.y+padding.y-labelContainer.getLocalBounds().top);
+			backgroundShape.setPosition(sf::Vector2f(cfg.winWidth/2,cfg.winHeight/2)+position);
+			labelShape.setPosition(cfg.winWidth/2+position.x+padding.x-labelShape.getLocalBounds().left, cfg.winHeight/2+position.y+padding.y-labelShape.getLocalBounds().top);
 			break;
 		case POS_BOTTOM:
-			backgroundRect.setPosition(sf::Vector2f(cfg.winWidth,cfg.winHeight)-position-size);
-			icon.setPosition(sf::Vector2f(cfg.winWidth,cfg.winHeight)-position-size);
-			labelContainer.setPosition(cfg.winWidth-position.x+padding.x-labelContainer.getLocalBounds().left-size.x, cfg.winHeight-position.y+padding.y-labelContainer.getLocalBounds().top-size.y);
+			backgroundShape.setPosition(sf::Vector2f(cfg.winWidth,cfg.winHeight)-position-size);
+			labelShape.setPosition(cfg.winWidth-position.x+padding.x-labelShape.getLocalBounds().left-size.x, cfg.winHeight-position.y+padding.y-labelShape.getLocalBounds().top-size.y);
 			break;
 	}
 }
 
-/*
-	################################################
-		UPDATE functions
-*/
-
+// Updaters
 void GUI::Button::update(){
+	setSize();
 	setPosition(positionType, position);
 }
 
-// Draw button on window
-void GUI::Button::draw(sf::RenderWindow &window){
-	// Draw icon and background of the button
-	window.draw(backgroundRect);
-	window.draw(icon);
-	// Draw text
-	labelContainer.setString(label);
-	window.draw(labelContainer);
+// Constructor, Deconstructor and draw
+GUI::Button::Button(const std::string& a_label, const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background) : Button(a_positionType, a_position, a_padding, a_background){
+	setText(a_label);
 }
 
-/*
-	################################################
-		EVENT function
-*/
-
-bool GUI::Button::isClicked(sf::Vector2i mousePos){
-	switch(positionType){
-		case POS_NORMAL:
-		default:
-			if(mousePos.x >= position.x && mousePos.x <= (position.x+size.x) && mousePos.y <= (position.y+size.y) && mousePos.y >= position.y){
-				return true;
-			}
-			break;
-		case POS_CENTER:
-			if(mousePos.x >= cfg.winWidth/2+position.x && mousePos.x <= (cfg.winWidth/2+position.x+size.x) && mousePos.y <= (cfg.winHeight/2+position.y+size.y) && mousePos.y >= cfg.winHeight/2+position.y){
-				return true;
-			}
-			break;
-		case POS_BOTTOM:
-			if(mousePos.x >= cfg.winWidth-position.x-size.x && mousePos.x <= (cfg.winWidth-position.x) && mousePos.y >= (cfg.winHeight-position.y-size.y) && mousePos.y <= cfg.winHeight-position.y){
-				return true;
-			}
-			break;
-	}
-	return false;
+GUI::Button::Button(const std::wstring& a_label, const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background) : Button(a_positionType, a_position, a_padding, a_background){
+	setText(a_label);
 }
 
-
-/*
-	################################################
-		CONSTRUCTORS
-*/
-
-
-GUI::Button::Button(std::string arg_label, GUI::Position arg_positionType, sf::Vector2f arg_position, sf::Vector2f arg_padding, sf::Color arg_background) : label(arg_label), positionType(arg_positionType), position(arg_position), padding(arg_padding), background(arg_background){
-	// Set background color of the button
-	backgroundRect.setFillColor(arg_background);
+GUI::Button::Button(const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background) : AButton(a_positionType, a_position, a_padding, a_background){
+	// Set background color
+	backgroundShape.setFillColor(a_background);
 
 	// Set default settings for button text
 	setFont(cfg.fNormal);
 	setFontSize(16);
 	setTextColor(sf::Color::Black);
-	setText(arg_label);
 
-	// Set size of the button
+	// Set background hover color
+	backgroundHover.r = (backgroundColor.r < 123) ? (backgroundColor.r + 20) : (backgroundColor.r - 20);
+	backgroundHover.g = (backgroundColor.g < 123) ? (backgroundColor.g + 20) : (backgroundColor.g - 20);
+	backgroundHover.b = (backgroundColor.b < 123) ? (backgroundColor.b + 20) : (backgroundColor.b - 20);
+
+	// Set position
 	setSize();
+	setPosition(a_positionType, a_position);
+}
 
-	// Set position of the button
-	setPosition(arg_positionType,arg_position);
-};
+GUI::Button::~Button(){
+}
 
+void GUI::Button::draw(sf::RenderWindow& a_win){
+	a_win.draw(backgroundShape);
+	a_win.draw(labelShape);
+}

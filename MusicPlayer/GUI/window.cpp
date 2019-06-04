@@ -27,5 +27,14 @@ namespace GUI{
 				cfg.isFullscreen = false;
 			}
 		}
+
+		// Turn on save mode
+		void saveMode(const bool& a_state, sf::Window& a_win){
+			if(a_state && cfg.saveEnergy){
+				a_win.setFramerateLimit(15);
+			} else {
+				a_win.setFramerateLimit(cfg.winFPS);
+			}
+		}
 	}
 }

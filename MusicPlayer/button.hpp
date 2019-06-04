@@ -20,86 +20,66 @@
 		- background to display on the back
 */
 namespace GUI {
-	enum Position {
+	enum Position{
 		POS_NORMAL,   // Start positioning from (0,0)
 		POS_CENTER,   // Start positioning from center of the window
 		POS_BOTTOM    // Start positioning from the bottom right of the window
 	};
-	class wButton {
-		private:
+
+	/*
+		###############################################
+			Abstract class of the button
+		###############################################
+	*/
+
+	class AButton{
+		protected:
 			// General stuff
 			Position positionType;                      // From where button should position
 			sf::Vector2f position;                      // Position of the button
 			sf::Vector2f padding;                       // Padding of the button
 			sf::Vector2f size;                          // Size of clickable region
 
-			// Button label
-			std::wstring label;                         // Displayed text on the button
-			sf::Text labelContainer;
-
 			// Background
-			sf::RectangleShape backgroundRect;          // Rectangle behind the button, which describes it's borders
-			sf::Color background;                       // Background of button
+			sf::RectangleShape backgroundShape;         // Rectangle behind the button, which describes it's borders
+			sf::Color backgroundColor;                  // Background of button
+			sf::Color backgroundHover;
 
-			// Icon
-			sf::Sprite icon;
-
-			// Argument
-			unsigned short buttonValue = 0;
 		public:
-			void setIcon(sf::Texture &texture);
-			void setFontSize(unsigned int size);
-			void setTextColor(sf::Color color);
-			void setFont(sf::Font &font);
-			void setText(std::wstring str);
-			void setSize();
-			void setValue(unsigned short arg_number);
-			void setPosition(Position arg_positionType, sf::Vector2f arg_position);
+			AButton(const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background);
+			virtual ~AButton();
 
-			bool isClicked(sf::Vector2i mousePos);
-
-			void update();
-			void draw(sf::RenderWindow &win);
-
-			wButton(std::wstring arg_label, Position arg_positionType, sf::Vector2f arg_position, sf::Vector2f arg_padding, sf::Color arg_background);
+			virtual void draw(sf::RenderWindow& a_win){};
 	};
-	class Button {
+
+	/*
+		###############################################
+			Text buttons
+		###############################################
+	*/
+
+	class Button final : public AButton{
 		private:
-			// General stuff
-			Position positionType;                      // From where button should position
-			sf::Vector2f position;                      // Position of the button
-			sf::Vector2f padding;                       // Padding of the button
-			sf::Vector2f size;                          // Size of clickable region
-
-			// Button label
-			std::string label;                         // Displayed text on the button
-			sf::Text labelContainer;
-
-			// Background
-			sf::RectangleShape backgroundRect;          // Rectangle behind the button, which describes it's borders
-			sf::Color background;                       // Background of button
-
-			// Icon
-			sf::Sprite icon;
-
-			// Argument
+			sf::Text labelShape;
 		public:
-			unsigned short buttonValue = 0;
-
-			void setIcon(sf::Texture &texture);
-			void setFontSize(unsigned int size);
-			void setTextColor(sf::Color color);
-			void setFont(sf::Font &font);
-			void setText(std::string str);
 			void setSize();
-			void setValue(unsigned short arg_number);
-			void setPosition(Position arg_positionType, sf::Vector2f arg_position);
+			void checkIfHover(const sf::Vector2i& a_mousePos);
+			bool checkIfClicked(const sf::Vector2i& a_mousePos);
 
-			bool isClicked(sf::Vector2i mousePos);
+			void setText(const std::string& a_label);
+			void setText(const std::wstring& a_label);
+			void setTextColor(const sf::Color& a_color);
+			void setFontSize(const unsigned int& a_size);
+			void setFont(sf::Font& a_font);
 
 			void update();
-			void draw(sf::RenderWindow &win);
-
-			Button(std::string arg_label, Position arg_positionType, sf::Vector2f arg_position, sf::Vector2f arg_padding, sf::Color arg_background);
+			
+			Button(const std::string& a_label, const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background);
+			Button(const std::wstring& a_label, const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background);
+			Button(const Position& a_positionType, const sf::Vector2f& a_position, const sf::Vector2f& a_padding, const sf::Color& a_background);
+			virtual ~Button();
+			virtual void draw(sf::RenderWindow& a_win);
+			void setPosition(const Position& a_positionType, const sf::Vector2f& a_position);
 	};
+
 }
