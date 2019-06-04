@@ -14,7 +14,7 @@
 #include "GUI/window.hpp"
 
 
-//std::vector<GUI::Button> buttonListOfDevices = {};
+std::vector<GUI::Checkbox> buttonListOfDevices = {};
 
 ProgressBar::ProgressBar(){
 	// Change "duration and current time" text style
@@ -67,6 +67,9 @@ void SpectrumComp::fontReload(){
 	but_prevSong.update();
 	but_playSong.update();
 	but_chooseSong.update();
+	for(size_t i=0; i<buttonListOfDevices.size(); i++){
+		buttonListOfDevices[i].update();
+	}
 }
 
 void SpectrumComp::reload(){
@@ -110,14 +113,27 @@ void SpectrumComp::reload(){
 	texture.setSmooth(true);
 
 	// Clear buttons vectors
-	//buttonListOfDevices.clear();
+	buttonListOfDevices.clear();
 
 	// Push buttons
-	//BASS_DEVICEINFO info;
-	//for(int a = 1; BASS_GetDeviceInfo(a, &info); a++){
-	//	buttonListOfDevices.emplace_back(GUI::Button((std::string)info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 120.0f+a*30.0f), sf::Vector2f(5.0f, 5.0f), cfg.lighter_grey));
-	//	buttonListOfDevices[a-1].buttonValue = a;
-	//}
+	BASS_DEVICEINFO info;
+	BASS_SetConfig( BASS_CONFIG_UNICODE, true );
+	for(int a = 1; BASS_GetDeviceInfo(a, &info); a++){
+		buttonListOfDevices.emplace_back(GUI::Checkbox(info.name, GUI::POS_BOTTOM, sf::Vector2f(10.0f, 80.0f+a*26.0f), sf::Vector2f(10.0f, 5.0f), sf::Color(200, 200, 200)));
+	}
+	info = {};
+	for(size_t i=0; i<buttonListOfDevices.size(); i++){
+		BASS_GetDeviceInfo(i+1, &info);
+		buttonListOfDevices[i].setSize(sf::Vector2f(350.0f, 24.0f));
+		if(info.flags & BASS_DEVICE_DEFAULT){
+			std::cout << "Test";
+			buttonListOfDevices[i].setSelected();
+		}
+	}
+
+	// Reload all buttons
+	fontReload();
+
 	Logger::log("INFO - player.cpp init()", "Appended buttons");
 }
 
@@ -291,9 +307,7 @@ void SpectrumComp::setVisualizerBars(){
 		Constructor, Decontructor & draw func.
 	###############################################
 */
-SpectrumComp::SpectrumComp(){
-	reload();
-}
+SpectrumComp::SpectrumComp(){}
 
 void SpectrumComp::draw(sf::RenderWindow& a_win){
 	// Clear window
@@ -321,9 +335,6 @@ void SpectrumComp::draw(sf::RenderWindow& a_win){
 			case sf::Event::Resized:
 				a_win.setView(sf::View(sf::FloatRect(0.0f, 0.0f, event.size.width, event.size.height)));
 				onWindowResizing(static_cast<float>(event.size.width), static_cast<float>(event.size.height));
-				//for(size_t i=0; i<buttonListOfDevices.size(); i++){
-				//	buttonListOfDevices[i].update();
-				//}
 				fontReload();
 				Player::refreshAlbum();
 				break;
@@ -348,11 +359,17 @@ void SpectrumComp::draw(sf::RenderWindow& a_win){
 			case sf::Event::MouseButtonPressed:
 				if(event.mouseButton.button == 0){
 					sf::Vector2i mousePos(event.mouseButton.x, event.mouseButton.y);
-					//for(GUI::Button button : buttonListOfDevices){
-					//	if(button.isClicked(mousePos)){
-					//		Player::changeChannel(button.buttonValue);
-					//	}
-					//}
+					for(size_t i=0; i<buttonListOfDevices.size(); i++){
+						if(buttonListOfDevices[i].checkIfClicked(mousePos)){
+							Player::changeChannel(i+1);
+							for(size_t j=0; j<buttonListOfDevices.size(); j++){
+								if(j!=i){
+									buttonListOfDevices[j].updateSelected();
+								}
+							}
+							break;
+						}
+					}
 					if(but_playSong.checkIfClicked(mousePos)){
 						Player::pauseSong();
 					}
@@ -392,6 +409,9 @@ void SpectrumComp::draw(sf::RenderWindow& a_win){
 				but_prevSong.checkIfHover(mousePos);
 				but_playSong.checkIfHover(mousePos);
 				but_chooseSong.checkIfHover(mousePos);
+				for(size_t i=0; i<buttonListOfDevices.size(); i++){
+					buttonListOfDevices[i].checkIfHover(mousePos);
+				}
 				break;
 			}
 			default:
@@ -410,12 +430,6 @@ void SpectrumComp::draw(sf::RenderWindow& a_win){
 	a_win.draw(titleTextShadow);
 	a_win.draw(titleText);
 	progressBar.draw(a_win);
-
-	//if(cfg.drawHUD){
-	//	for(GUI::Button button : buttonListOfDevices){
-	//		button.draw(a_win);
-	//	}
-	//}
 	
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && cfg.isClickedWindow){
 		sf::Vector2i mouseCords = sf::Mouse::getPosition(a_win);
@@ -424,11 +438,16 @@ void SpectrumComp::draw(sf::RenderWindow& a_win){
 			BASS_ChannelSetPosition(cfg.channel, BASS_ChannelSeconds2Bytes(cfg.channel, getClicked), BASS_POS_BYTE);
 		}
 	}
-	
-	but_nextSong.draw(a_win);
-	but_prevSong.draw(a_win);
-	but_playSong.draw(a_win);
-	but_chooseSong.draw(a_win);
+
+	if(cfg.drawHUD){
+		but_nextSong.draw(a_win);
+		but_prevSong.draw(a_win);
+		but_playSong.draw(a_win);
+		but_chooseSong.draw(a_win);
+		for(size_t i=0; i<buttonListOfDevices.size(); i++){
+			buttonListOfDevices[i].draw(a_win);
+		}
+	}
 
 	a_win.display();
 }

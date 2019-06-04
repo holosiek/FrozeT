@@ -25,7 +25,6 @@
 
 	< should be fixed to allow going track by track, not choosing random song >
 */
-
 int main(int a_argc, char** a_argv){
 	// Clear logs
 	Logger::clearLog();
@@ -37,11 +36,11 @@ int main(int a_argc, char** a_argv){
 	}
 
 	// Initialize config
-	Config::init(cfg);
-
-	// Start main init
-	Player::init();
-	Player::draw();
+	if(Config::init(cfg)){
+		// Start main init
+		Player::init();
+		Player::draw();
+	}
 
 	/*
 	 TODO: 

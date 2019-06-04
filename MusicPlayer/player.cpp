@@ -379,6 +379,7 @@ namespace Player{
 		###############################################
 	*/
 
+
 	// Init function
 	void init(){
 		// Initialize Bass
@@ -389,8 +390,11 @@ namespace Player{
 		// Apply window settings
 		cfg.setWindowSettings(window);
 		Logger::log("INFO - player.cpp init()", "Set window settings");
+
+		// Reload components
+		spectrumComp.reload();
 	}
-	
+
 	// Draw window
 	void draw(){
 		while(window.isOpen()){

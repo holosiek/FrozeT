@@ -155,26 +155,24 @@ void Config::loadShaders(){
 }
 
 #include "player.hpp"
+
+#include <iostream>
 // Load all fonts
-void Config::loadFonts(){
+bool Config::loadFonts(){
 	try{
 		// Try to load fonts
-		if(!fBold.loadFromFile(relPathToExePath(s_fBold))){ 
-			throw std::runtime_error("Primary font loading failed!");
-		} else {
-			Player::fontReload();
-		}
-
-		if(!fRegular.loadFromFile(relPathToExePath(s_fRegular))){ 
-			throw std::runtime_error("Secondary font loading failed!");
-		} else {
-			Player::fontReload();
-		}
-
 		if(!fNormal.loadFromFile(relPathToExePath(s_fNormal))){ 
 			throw std::runtime_error("Menu font loading failed!");
 		} else {
-			Player::fontReload();
+			if(!fBold.loadFromFile(relPathToExePath(s_fBold))){ 
+				throw std::runtime_error("Primary font loading failed!");
+			} else {
+				if(!fRegular.loadFromFile(relPathToExePath(s_fRegular))){ 
+					throw std::runtime_error("Secondary font loading failed!");
+				} else {
+					return true;
+				}
+			}
 		}
 
 		// Inform that fonts are loaded
@@ -200,7 +198,7 @@ Config::~Config(){
 }
 
 // Init of Config
-void Config::init(Config& a_cfg){
+bool Config::init(Config& a_cfg){
 	using json = nlohmann::json;
 	json confg;
 
@@ -221,7 +219,7 @@ void Config::init(Config& a_cfg){
 	a_cfg.loadSettings(confg);
 	a_cfg.loadTextures();
 	a_cfg.loadShaders();
-	a_cfg.loadFonts();
+	return a_cfg.loadFonts();
 }
 
 // Declare Config object

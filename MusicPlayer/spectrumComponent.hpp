@@ -47,7 +47,6 @@ class SpectrumComp final : public Screens::Screen{
 		GUI::Button but_nextSong = GUI::Button("Next Song", GUI::Position::POS_NORMAL, sf::Vector2f(10.0f, 40.0f), sf::Vector2f(10.0f, 5.0f), sf::Color(200, 200, 200));
 		GUI::Button but_prevSong = GUI::Button("Previous Song", GUI::Position::POS_NORMAL, sf::Vector2f(10.0f, 70.0f), sf::Vector2f(10.0f, 5.0f), sf::Color(200, 200, 200));
 		GUI::Button but_chooseSong = GUI::Button("Open folder", GUI::Position::POS_BOTTOM, sf::Vector2f(10.0f, 50.0f), sf::Vector2f(10.0f, 5.0f), sf::Color(200, 200, 200));
-
 	public:
 		// turbo trio
 		sf::Texture texture;
